@@ -1,0 +1,80 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absensi Driver</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; }
+        label { display: block; margin-top: 15px; font-weight: bold; }
+        input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 15px; background-color: #28a745; color: white; border: none; border-radius: 5px; font-size: 18px; margin-top: 25px; cursor: pointer; }
+        button:hover { background-color: #218838; }
+        #pesan { text-align: center; color: green; font-weight: bold; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>📋 Absensi Driver</h2>
+        <form id="formAbsen">
+            <label>Nama Driver:</label>
+            <select id="nama" required>
+                <option value="">-- Pilih Driver --</option>
+                <option value="VIRLA">VIRLA</option>
+                <option value="HENDI">HENDI</option>
+                <option value="YANTO">YANTO</option>
+                <option value="BUDI">BUDI</option>
+                <option value="KOMAR">KOMAR</option>
+                <option value="ILHAM">ILHAM</option>
+                <option value="ZULKARNAIN">ZULKARNAIN</option>
+                <option value="DUDY">DUDY</option>
+                <option value="NISAN">NISAN</option>
+                <option value="DODI">DODI</option>
+            </select>
+
+            <label>Tanggal:</label>
+            <input type="date" id="tanggal" required>
+
+            <label>Jam Berangkat (OUT):</label>
+            <input type="time" id="jam_out">
+
+            <label>Jam Pulang (IN):</label>
+            <input type="time" id="jam_in">
+
+            <button type="submit">Simpan Data</button>
+        </form>
+        <p id="pesan"></p>
+    </div>
+
+    <script>
+        document.getElementById("tanggal").valueAsDate = new Date();
+
+        document.getElementById("formAbsen").addEventListener("submit", async function(e) {
+            e.preventDefault();
+
+            const data = {
+                nama: document.getElementById("nama").value,
+                tanggal: document.getElementById("tanggal").value,
+                jam_out: document.getElementById("jam_out").value,
+                jam_in: document.getElementById("jam_in").value
+            };
+
+            const response = await fetch("/api/simpan", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+
+            const hasil = await response.json();
+            if (hasil.status === "sukses") {
+                document.getElementById("pesan").innerText = "✅ Data berhasil disimpan!";
+                document.getElementById("formAbsen").reset();
+                document.getElementById("tanggal").valueAsDate = new Date();
+                setTimeout(() => { document.getElementById("pesan").innerText = ""; }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>
