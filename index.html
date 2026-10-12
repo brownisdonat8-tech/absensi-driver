@@ -17,6 +17,8 @@ h1 { margin: 0 0 6px 0; font-size: 15px; text-align: center; }
 .toolbar button:active { opacity: 0.7; }
 .toolbar .btn-green { background: #28A745; }
 .toolbar .btn-cyan { background: #17A2B8; }
+.toolbar .btn-orange { background: #fd7e14; }
+.toolbar .btn-purple { background: #6f42c1; }
 .bulan-label { display: inline-flex; align-items: center; padding: 0 10px; font-weight: bold; font-size: 13px; min-width: 120px; justify-content: center; }
 .status-badge { position: fixed; top: 4px; right: 6px; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: bold; color: white; z-index: 100; }
 .status-badge.online { background: #28A745; }
@@ -34,7 +36,7 @@ th.in-col { background: #C6E0B4; position: sticky; top: 47px; z-index: 7; }
 td.no-col { background: #FFF2CC; width: 28px; position: sticky; left: 0; z-index: 3; }
 td.driver-name { background: #FFF2CC; font-weight: bold; text-align: left; padding: 0 6px; position: sticky; left: 28px; z-index: 3; min-width: 80px; }
 td.cell { padding: 0; }
-td.cell input { width: 56px; height: 30px; border: none; background: transparent; text-align: center; font-size: 12px; font-family: Arial; padding: 0; color: #C00000; font-weight: bold; }
+td.cell input { width: 90px; height: 34px; font-size: 14px; border: none; background: transparent; text-align: center; font-size: 12px; font-family: Arial; padding: 0; color: #C00000; font-weight: bold; }
 td.cell input:focus { background: #FFF9C4; outline: 2px solid #4472C4; }
 td.cell input.saved { background: #C6EFCE; }
 td.cell input.queued { background: #FFE5B4; }
@@ -129,6 +131,8 @@ tbody td.driver-name {
     <button onclick="geserBulan(1)">&#8594;</button>
     <button class="btn-green" onclick="bukaModal('modalDriver')">&#9881; Driver</button>
     <button class="btn-cyan" onclick="refreshData()">&#8635; Sync</button>
+    <button class="btn-orange" onclick="exportCSV()">&#128190; Export</button>
+    <button class="btn-purple" onclick="buatMatrix()">&#128202; Matrix</button>
   </div>
 </header>
 
@@ -167,7 +171,7 @@ tbody td.driver-name {
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbzIHgddK6a0ttXIDgdW41uET1mRlZBe3OBsNf6CfGXUyrMyJ5OjfazoKEFwoM1U3wQq9Q/exec";
 const NAMA_BULAN = ['','JANUARI','FEBRUARI','MARET','APRIL','MEI','JUNI','JULI','AGUSTUS','SEPTEMBER','OKTOBER','NOVEMBER','DESEMBER'];
-const NAMA_HARI = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY'];
+const NAMA_HARI = ['SENIN','SELASA','RABU','KAMIS','JUMAT','SABTU','MINGGU'];
 
 let curBulan = new Date().getMonth() + 1;
 let curTahun = new Date().getFullYear();
@@ -408,7 +412,49 @@ window.addEventListener('offline', updateBadge);
 setInterval(function() { if (navigator.onLine && getPending().length > 0) flushPending(); }, 30000);
 setInterval(function() { if (navigator.onLine) refreshData(true); }, 300000);
 
-loadCache();
+
+function exportCSV() {
+  const jmlHari = new Date(curTahun, curBulan, 0).getDate();
+  const daftarDriver = driversUntukBulan(curBulan, curTahun);
+  let csv = 'KINERJA DRIVER BULAN ' + NAMA_BULAN[curBulan] + ' ' + curTahun + '\n\n';
+  csv += 'NO,NAMA';
+  for (let d = 1; d <= jmlHari; d++) csv += ',Tgl ' + d + ' OUT,Tgl ' + d + ' IN';
+  csv += '\n';
+  daftarDriver.forEach(function(drv, idx) {
+    csv += (idx + 1) + ',' + drv.nama;
+    for (let d = 1; d <= jmlHari; d++) {
+      const tgl = curTahun + '-' + String(curBulan).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+      const key = drv.nama + '|' + tgl;
+      const log = logs[key] || { out: '', in: '' };
+      csv += ',"' + (log.out || '') + '","' + (log.in || '') + '"';
+    }
+    csv += '\n';
+  });
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'AbsensiDriver_' + NAMA_BULAN[curBulan] + '_' + curTahun + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('Export CSV didownload');
+}
+
+async function buatMatrix() {
+  if (!navigator.onLine) return toast('Butuh internet');
+  if (!confirm('Buat sheet "Matrix" di Google Sheets untuk bulan ' + NAMA_BULAN[curBulan] + ' ' + curTahun + '?')) return;
+  toast('Membuat Matrix...');
+  try {
+    const r = await api({ action: 'buat_matrix', bulan: curBulan, tahun: curTahun });
+    if (r.ok) {
+      toast('✅ Sheet Matrix dibuat. Cek Google Sheets!');
+    } else {
+      toast('Gagal: ' + r.error);
+    }
+  } catch (e) { toast('Gagal: ' + e.message); }
+}loadCache();
 renderTabel();
 updateBadge();
 refreshData(true);
