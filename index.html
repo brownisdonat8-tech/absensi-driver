@@ -866,31 +866,54 @@ async function renderRingkasan() {
     if (rd.ok) driversAll = rd.drivers || [];
   } catch(e) {}
 
-  const endStr = endDate.getFullYear() + '-' + String(endDate.getMonth()+1).padStart(2,'0') + '-' + String(endDate.getDate()).padStart(2,'0');
-  const startStr = startDate.getFullYear() + '-' + String(startDate.getMonth()+1).padStart(2,'0') + '-' + String(startDate.getDate()).padStart(2,'0');
+  const endStr2 = endDate.getFullYear() + '-' + String(endDate.getMonth()+1).padStart(2,'0') + '-' + String(endDate.getDate()).padStart(2,'0');
+  const startStr2 = startDate.getFullYear() + '-' + String(startDate.getMonth()+1).padStart(2,'0') + '-' + String(startDate.getDate()).padStart(2,'0');
   const daftarDriver = driversAll.filter(function(d) {
-    if (d.tglAktif && d.tglAktif > endStr) return false;
-    if (d.tglResign && d.tglResign < startStr) return false;
+    if (d.tglAktif && d.tglAktif > endStr2) return false;
+    if (d.tglResign && d.tglResign < startStr2) return false;
     return true;
   });
 
   const dateArr = [];
   let cur2 = new Date(startDate);
   while (cur2 <= endDate) { dateArr.push(new Date(cur2)); cur2.setDate(cur2.getDate() + 1); }
-  const blnShort = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
 
   let grandTotalMenit = 0;
   const hasil = [];
 
-  let html = '<table style="border-collapse:collapse;width:100%;font-size:10px;"><thead><tr>';
-  html += '<th style="background:#9333ea;color:white;padding:3px;border:1px solid #555;">NO</th>';
-  html += '<th style="background:#9333ea;color:white;padding:3px;border:1px solid #555;text-align:left;">NAMA</th>';
+  const bulanList = [];
+  dateArr.forEach(function(tgl) {
+    const key = tgl.getFullYear() + '-' + tgl.getMonth();
+    const last = bulanList[bulanList.length - 1];
+    if (!last || last.key !== key) {
+      bulanList.push({ key: key, nama: NAMA_BULAN[tgl.getMonth()+1] + ' ' + tgl.getFullYear(), jumlah: 1 });
+    } else { last.jumlah++; }
+  });
+  const multiBulan = bulanList.length > 1;
+
+  let html = '<table style="border-collapse:collapse;width:100%;font-size:10px;"><thead>';
+  if (multiBulan) {
+    html += '<tr>';
+    html += '<th rowspan="2" style="background:#9333ea;color:white;padding:3px;border:1px solid #555;">NO</th>';
+    html += '<th rowspan="2" style="background:#9333ea;color:white;padding:3px;border:1px solid #555;text-align:left;">NAMA</th>';
+    bulanList.forEach(function(b) {
+      html += '<th colspan="' + b.jumlah + '" style="background:#6b21a8;color:white;padding:3px;border:1px solid #555;font-size:10px;">' + b.nama + '</th>';
+    });
+    html += '<th rowspan="2" style="background:#28A745;color:white;padding:3px;border:1px solid #555;">TOTAL</th>';
+    html += '</tr><tr>';
+  } else {
+    html += '<tr>';
+    html += '<th style="background:#9333ea;color:white;padding:3px;border:1px solid #555;">NO</th>';
+    html += '<th style="background:#9333ea;color:white;padding:3px;border:1px solid #555;text-align:left;">NAMA</th>';
+  }
   for (let h = 0; h < dateArr.length; h++) {
     const tgl = dateArr[h];
     const cls = tgl.getDay() === 1 ? 'background:#dc3545;color:white;' : 'background:#c4b5fd;';
     html += '<th style="' + cls + 'padding:2px;border:1px solid #555;font-size:9px;">' + tgl.getDate() + '</th>';
   }
-  html += '<th style="background:#28A745;color:white;padding:3px;border:1px solid #555;">TOTAL</th>';
+  if (!multiBulan) {
+    html += '<th style="background:#28A745;color:white;padding:3px;border:1px solid #555;">TOTAL</th>';
+  }
   html += '</tr></thead><tbody>';
 
   daftarDriver.forEach(function(drv, idx) {
@@ -938,15 +961,52 @@ function exportRingkasanXLSX() {
   if (typeof XLSX === 'undefined') { toast('Library XLSX belum siap'); return; }
   const blnShort = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
   const aoa = [];
-  const head = ['NO', 'NAMA'];
-  lastRingkasan.dates.forEach(function(tgl) {
-    head.push(String(tgl.getDate()).padStart(2,'0') + '-' + blnShort[tgl.getMonth()]);
-  });
-  head.push('TOTAL');
   aoa.push(['RINGKASAN KINERJA DRIVER']);
   aoa.push(['Periode: ' + lastRingkasan.periode]);
   aoa.push([]);
-  aoa.push(head);
+
+  const bulanListX = [];
+  lastRingkasan.dates.forEach(function(tgl) {
+    const key = tgl.getFullYear() + '-' + tgl.getMonth();
+    const last = bulanListX[bulanListX.length - 1];
+    if (!last || last.key !== key) {
+      bulanListX.push({ key: key, nama: NAMA_BULAN[tgl.getMonth()+1] + ' ' + tgl.getFullYear(), jumlah: 1 });
+    } else { last.jumlah++; }
+  });
+  const multiBulanX = bulanListX.length > 1;
+  const totalColsX = 2 + lastRingkasan.dates.length + 1;
+  const mergesX = [];
+  mergesX.push({s: {r: 0, c: 0}, e: {r: 0, c: totalColsX - 1}});
+
+  if (multiBulanX) {
+    const headX1 = ['NO', 'NAMA'];
+    const headX2 = ['', ''];
+    let colIdx = 2;
+    bulanListX.forEach(function(b) {
+      headX1.push(b.nama);
+      mergesX.push({s: {r: 3, c: colIdx}, e: {r: 3, c: colIdx + b.jumlah - 1}});
+      for (let i = 1; i < b.jumlah; i++) headX1.push('');
+      colIdx += b.jumlah;
+    });
+    headX1.push('TOTAL');
+    mergesX.push({s: {r: 3, c: 0}, e: {r: 4, c: 0}});
+    mergesX.push({s: {r: 3, c: 1}, e: {r: 4, c: 1}});
+    mergesX.push({s: {r: 3, c: totalColsX - 1}, e: {r: 4, c: totalColsX - 1}});
+    lastRingkasan.dates.forEach(function(tgl) {
+      headX2.push(String(tgl.getDate()).padStart(2,'0'));
+    });
+    headX2.push('');
+    aoa.push(headX1);
+    aoa.push(headX2);
+  } else {
+    const headX1 = ['NO', 'NAMA'];
+    lastRingkasan.dates.forEach(function(tgl) {
+      headX1.push(String(tgl.getDate()).padStart(2,'0') + '-' + blnShort[tgl.getMonth()]);
+    });
+    headX1.push('TOTAL');
+    aoa.push(headX1);
+  }
+
   lastRingkasan.drivers.forEach(function(d, idx) {
     const row = [idx + 1, d.nama];
     d.hari.forEach(function(m) { row.push(m !== null ? formatJamKerja(m) : ''); });
@@ -960,7 +1020,7 @@ function exportRingkasanXLSX() {
 
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws['!merges'] = [{s: {r: 0, c: 0}, e: {r: 0, c: head.length - 1}}];
+  ws['!merges'] = mergesX;
   const wscols = [{wch: 5}, {wch: 15}];
   for (let i = 0; i < lastRingkasan.dates.length; i++) wscols.push({wch: 8});
   wscols.push({wch: 10});
