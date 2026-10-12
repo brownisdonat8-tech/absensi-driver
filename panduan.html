@@ -1,0 +1,447 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panduan Absensi Driver</title>
+<style>
+* { box-sizing: border-box; }
+body { font-family: Arial, sans-serif; margin: 0; line-height: 1.65; background: #f8f9fa; color: #333; }
+.layout { display: flex; max-width: 1200px; margin: 0 auto; }
+nav.toc { width: 250px; background: #fff; border-right: 1px solid #ddd; padding: 20px; position: sticky; top: 0; height: 100vh; overflow-y: auto; flex-shrink: 0; }
+nav.toc h3 { margin: 0 0 14px 0; color: #9333ea; font-size: 15px; }
+nav.toc a { display: block; padding: 7px 0; color: #333; text-decoration: none; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
+nav.toc a:hover { color: #9333ea; padding-left: 4px; }
+main { flex: 1; padding: 20px 30px; max-width: 900px; }
+h1 { color: #9333ea; border-bottom: 3px solid #FFC000; padding-bottom: 10px; font-size: 24px; }
+h2 { color: #9333ea; margin-top: 32px; padding: 10px 12px; background: #f3e8ff; border-left: 5px solid #9333ea; font-size: 18px; border-radius: 0 4px 4px 0; }
+h3 { color: #444; margin-top: 22px; font-size: 15px; }
+p, li { font-size: 14px; }
+code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #c7254e; font-family: monospace; }
+.box { border-radius: 6px; padding: 12px 16px; margin: 14px 0; font-size: 13px; }
+.box-info { border-left: 4px solid #17A2B8; background: #e7f8fa; }
+.box-warning { border-left: 4px solid #fd7e14; background: #fff4e6; }
+.box-danger { border-left: 4px solid #dc3545; background: #ffe7e9; }
+.box-success { border-left: 4px solid #28A745; background: #e6f7eb; }
+.mock-toolbar { background: #FFC000; padding: 10px; border-radius: 6px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin: 14px 0; }
+.btn-mock { display: inline-block; padding: 7px 12px; border-radius: 5px; font-size: 12px; font-weight: bold; color: white; margin: 0; }
+.b-blue { background: #4472C4; } .b-green { background: #28A745; } .b-cyan { background: #17A2B8; }
+.b-orange { background: #fd7e14; } .b-purple { background: #6f42c1; } .b-teal { background: #0d9488; }
+.b-ringkasan { background: #9333ea; } .b-red { background: #dc3545; } .b-gray { background: #6c757d; }
+.step { background: #fff; border-radius: 6px; padding: 12px 16px 12px 52px; margin: 10px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.08); position: relative; font-size: 13px; }
+.step-num { display: inline-block; position: absolute; left: 12px; top: 12px; width: 28px; height: 28px; background: #9333ea; color: white; border-radius: 50%; text-align: center; line-height: 28px; font-weight: bold; }
+table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+table th { background: #9333ea; color: white; padding: 9px 10px; text-align: left; }
+table td { padding: 9px 10px; border-bottom: 1px solid #eee; vertical-align: top; }
+table tr:hover td { background: #faf5ff; }
+.flow { text-align: center; margin: 16px 0; font-size: 13px; color: #555; }
+.flow span { display: inline-block; padding: 8px 12px; background: #f3e8ff; border-radius: 6px; margin: 3px; font-weight: bold; }
+.flow .arrow { background: none; padding: 0 4px; font-size: 18px; color: #9333ea; }
+@media (max-width: 768px) {
+  .layout { flex-direction: column; }
+  nav.toc { width: 100%; height: auto; position: static; border-right: none; border-bottom: 1px solid #ddd; }
+  main { padding: 15px; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="toc">
+<h3>&#128214; Daftar Isi</h3>
+<a href="#apa">1. Apa Itu Aplikasi Ini?</a>
+<a href="#buka">2. Cara Buka di Tablet</a>
+<a href="#tampilan">3. Tampilan Utama</a>
+<a href="#tombol">4. Penjelasan Semua Tombol</a>
+<a href="#input">5. Cara Input Jam Kerja</a>
+<a href="#driver">6. Kelola Daftar Driver</a>
+<a href="#export">7. Export ke Excel</a>
+<a href="#print">8. Print / Cetak</a>
+<a href="#ringkasan">9. Ringkasan Kinerja</a>
+<a href="#matrix">10. Sinkronisasi Matrix</a>
+<a href="#offline">11. Mode Offline (WiFi Mati)</a>
+<a href="#trouble">12. Kalau Ada Masalah</a>
+<a href="#database">13. Lokasi Database</a>
+</nav>
+<main>
+
+<h1>&#128214; Panduan Penggunaan Aplikasi Absensi Driver</h1>
+<p>Panduan ini dibuat untuk membantu petugas security/satpam dalam menggunakan aplikasi absensi driver. Semua tombol, fungsi, dan cara pakai dijelaskan langkah demi langkah.</p>
+
+<div class="box box-info">
+<b>&#128161; Info Singkat:</b><br>
+Aplikasi ini menggantikan pencatatan absensi manual di Excel. Data otomatis tersimpan di Google Sheets (cloud), jadi tidak akan hilang dan bisa dilihat dari mana saja.
+</div>
+
+<h2 id="apa">1. Apa Itu Aplikasi Ini?</h2>
+<p><b>Absensi Driver</b> adalah aplikasi berbasis web untuk mencatat jam kerja driver setiap hari. Aplikasi mencatat:</p>
+<ul>
+<li><b>Jam OUT</b> &mdash; jam berangkat / keluar</li>
+<li><b>Jam IN</b> &mdash; jam pulang / kembali</li>
+<li>Per driver, per hari, per bulan</li>
+</ul>
+<p><b>Keunggulan:</b></p>
+<ul>
+<li>&#9989; Tampilan seperti Excel &mdash; tidak asing lagi</li>
+<li>&#9989; Bisa dipakai offline (saat WiFi mati)</li>
+<li>&#9989; Data otomatis tersimpan ke Google Sheets</li>
+<li>&#9989; Bisa export Excel, print, dan hitung kinerja</li>
+<li>&#9989; Tidak perlu install aplikasi &mdash; cukup buka di Chrome</li>
+</ul>
+
+<h2 id="buka">2. Cara Buka Aplikasi di Tablet</h2>
+<div class="step"><span class="step-num">1</span><b>Pastikan tablet terhubung WiFi</b> (kalau WiFi mati, aplikasi tetap bisa, tapi nanti sync saat WiFi nyala lagi).</div>
+<div class="step"><span class="step-num">2</span><b>Di layar utama (home screen) tablet</b>, cari icon bernama <b>Absensi Driver</b> (ada gambar tabel/absen).</div>
+<div class="step"><span class="step-num">3</span><b>Tap icon itu</b> &mdash; aplikasi akan terbuka otomatis di Chrome.</div>
+<div class="step"><span class="step-num">4</span>Tunggu 2&ndash;3 detik sampai tabel muncul.</div>
+
+<div class="box box-warning">
+<b>&#9888; Kalau icon tidak ada:</b><br>
+Buka Chrome &rarr; ketik di address bar: <code>brownisdonat8-tech.github.io/absensi-driver</code> &rarr; tunggu muncul &rarr; tap menu (&#8942;) &rarr; <b>Add to Home screen</b>.
+</div>
+
+<h2 id="tampilan">3. Tampilan Utama</h2>
+<p>Saat aplikasi terbuka, kamu akan melihat tampilan seperti ini:</p>
+
+<div class="box">
+<b>Bagian atas (kuning):</b> Judul bulan + tanggal<br>
+<b>Toolbar (tombol-tombol):</b> Baris tombol warna-warni<br>
+<b>Tabel:</b> Daftar driver dengan kolom tanggal &amp; jam<br>
+<b>Badge status (kanan atas):</b> ONLINE (hijau) atau OFFLINE (merah)
+</div>
+
+<h3>Badge Status (Kanan Atas):</h3>
+<table>
+<tr><th>Warna</th><th>Tulisan</th><th>Artinya</th></tr>
+<tr><td><span class="btn-mock b-green" style="padding:2px 8px;font-size:11px;">ONLINE</span></td><td>Hijau</td><td>WiFi nyala, data langsung ke Google Sheets</td></tr>
+<tr><td><span class="btn-mock b-red" style="padding:2px 8px;font-size:11px;">OFFLINE</span></td><td>Merah</td><td>WiFi mati, data disimpan sementara di tablet</td></tr>
+<tr><td><span class="btn-mock b-orange" style="padding:2px 8px;font-size:11px;">PENDING</span></td><td>Oranye</td><td>Ada data belum ter-sync, tunggu WiFi nyala</td></tr>
+<tr><td><span class="btn-mock b-cyan" style="padding:2px 8px;font-size:11px;">SYNC...</span></td><td>Biru muda</td><td>Sedang mengirim data ke Google Sheets</td></tr>
+</table>
+
+<h2 id="tombol">4. Penjelasan Semua Tombol</h2>
+<p>Toolbar memiliki tombol-tombol ini (dari kiri ke kanan):</p>
+
+<div class="mock-toolbar">
+<span class="btn-mock b-blue">&larr;</span>
+<span class="btn-mock" style="background:transparent;color:#333;">OKTOBER 2026</span>
+<span class="btn-mock b-blue">&rarr;</span>
+<span class="btn-mock b-green">&#9881; Driver</span>
+<span class="btn-mock b-cyan">&#128260; Sync</span>
+<span class="btn-mock b-orange">&#128228; Export Excel</span>
+<span class="btn-mock b-purple">&#128202; Matrix</span>
+<span class="btn-mock b-teal">&#128229; Upload Matrix</span>
+<span class="btn-mock b-orange">&#128424; Print</span>
+<span class="btn-mock b-ringkasan">&#9201; Ringkasan</span>
+<span class="btn-mock b-red">&#10067; Panduan</span>
+</div>
+
+<h3>Tombol &larr; dan &rarr; (Bulan Lalu / Bulan Depan)</h3>
+<p>Untuk pindah bulan. Tekan &larr; untuk lihat bulan sebelumnya, &rarr; untuk bulan berikutnya. Teks di tengah menunjukkan bulan yang sedang tampil (misal: OKTOBER 2026).</p>
+
+<h3>Tombol &#9881; Driver (Hijau)</h3>
+<p>Untuk mengelola daftar driver &mdash; tambah driver baru, ubah nama, atau tandai resign.</p>
+
+<h3>Tombol &#128260; Sync (Biru Muda)</h3>
+<p>Untuk paksa ambil data terbaru dari Google Sheets. Gunakan kalau ada perubahan dari PC (admin) dan ingin langsung lihat di tablet.</p>
+
+<h3>Tombol &#128228; Export Excel (Oranye)</h3>
+<p>Untuk download data absensi dalam bentuk file Excel (.xlsx). Bisa pilih bulan atau rentang tanggal tertentu.</p>
+
+<h3>Tombol &#128202; Matrix (Ungu)</h3>
+<p>Untuk membuat sheet baru di Google Sheets bernama "Matrix" yang tampilannya persis seperti di tablet. Berguna untuk admin yang mau lihat/edit data dalam format Excel.</p>
+
+<h3>Tombol &#128229; Upload Matrix (Teal)</h3>
+<p>Kebalikan dari Matrix. Kalau admin mengedit data di sheet "Matrix" dari PC, tekan tombol ini untuk menarik perubahan ke tablet.</p>
+
+<h3>Tombol &#128424; Print (Oranye)</h3>
+<p>Untuk mencetak tabel ke printer atau simpan sebagai PDF. Hasil print rapi (toolbar &amp; tombol tidak ikut tercetak).</p>
+
+<h3>Tombol &#9201; Ringkasan (Ungu Tua)</h3>
+<p>Untuk menghitung total jam kerja setiap driver per hari (durasi OUT &rarr; IN). Bisa difilter per bulan atau rentang tanggal, dan bisa diexport ke Excel.</p>
+
+<h3>Tombol &#10067; Panduan (Merah)</h3>
+<p>Untuk membuka halaman panduan ini. Klik &rarr; akan terbuka di tab baru.</p>
+
+<h2 id="input">5. Cara Input Jam Kerja</h2>
+<p>Ini kegiatan utama sehari-hari. Ikuti langkah ini:</p>
+
+<div class="step"><span class="step-num">1</span><b>Cari nama driver</b> di kolom NAMA (kiri). Contoh: <b>VIRLA</b>.</div>
+<div class="step"><span class="step-num">2</span><b>Cari kolom tanggal</b> hari ini (lihat nama hari &amp; tanggal di header). Contoh: <b>SENIN 05-Okt-26</b>.</div>
+<div class="step"><span class="step-num">3</span>Ada 2 sub-kolom: <b>OUT</b> (hijau) dan <b>IN</b> (hijau muda).</div>
+<div class="step"><span class="step-num">4</span><b>Tap kotak di bawah OUT</b> &mdash; muncul input jam.</div>
+<div class="step"><span class="step-num">5</span>Atur jam berangkat (misal 07:30). Tap <b>OK/Set</b>.</div>
+<div class="step"><span class="step-num">6</span>Kotak akan berkedip <span style="background:#C6EFCE;padding:2px 6px;border-radius:3px;">hijau</span> = berhasil tersimpan.</div>
+<div class="step"><span class="step-num">7</span>Saat driver pulang, tap kotak di bawah IN. Atur jam pulang (misal 15:45). Tap OK.</div>
+
+<div class="box box-success">
+<b>&#9989; Selesai!</b> Data otomatis tersimpan ke Google Sheets (kalau ONLINE). Kalau OFFLINE, data disimpan sementara di tablet, nanti otomatis terkirim saat WiFi nyala.
+</div>
+
+<h3>Tanda Warna Kotak Input:</h3>
+<table>
+<tr><th>Warna</th><th>Artinya</th></tr>
+<tr><td><span style="background:#FFF9C4;padding:4px 20px;border:1px solid #ccc;">Kuning</span></td><td>Sedang dipilih (aktif)</td></tr>
+<tr><td><span style="background:#C6EFCE;padding:4px 20px;border:1px solid #ccc;">Hijau</span></td><td>Data berhasil terkirim ke Google Sheets</td></tr>
+<tr><td><span style="background:#FFE5B4;padding:4px 20px;border:1px solid #ccc;">Oranye</span></td><td>Data disimpan sementara (offline), belum ter-sync</td></tr>
+<tr><td><span style="background:#fff;padding:4px 20px;border:1px solid #ccc;">Putih</span></td><td>Belum ada input / kosong</td></tr>
+</table>
+
+<h2 id="driver">6. Kelola Daftar Driver</h2>
+<p>Kalau ada driver baru masuk, atau driver resign, kamu bisa ubah daftarnya di sini.</p>
+
+<div class="step"><span class="step-num">1</span>Tap tombol <span class="btn-mock b-green">&#9881; Driver</span></div>
+<div class="step"><span class="step-num">2</span>Akan muncul kotak daftar driver.</div>
+
+<h3>Cara Tambah Driver Baru:</h3>
+<div class="step"><span class="step-num">1</span>Di baris atas, isi <b>Nama Driver Baru</b> (contoh: ANDI).</div>
+<div class="step"><span class="step-num">2</span>Isi <b>Mulai Aktif</b> (tanggal mulai kerja).</div>
+<div class="step"><span class="step-num">3</span>Tap <span class="btn-mock b-green">+ Tambah</span>.</div>
+<div class="step"><span class="step-num">4</span>Nama akan muncul di daftar. Tutup kotak, lalu refresh halaman untuk lihat di tabel.</div>
+
+<h3>Cara Ubah Nama Driver:</h3>
+<div class="step"><span class="step-num">1</span>Cari nama driver di daftar.</div>
+<div class="step"><span class="step-num">2</span>Ubah nama di kotak input.</div>
+<div class="step"><span class="step-num">3</span>Tap <span class="btn-mock b-blue">Simpan</span> di baris itu.</div>
+
+<h3>Cara Tandai Driver Resign:</h3>
+<div class="step"><span class="step-num">1</span>Cari nama driver di daftar.</div>
+<div class="step"><span class="step-num">2</span>Isi <b>Resign</b> dengan tanggal terakhir kerja.</div>
+<div class="step"><span class="step-num">3</span>Tap <span class="btn-mock b-blue">Simpan</span>.</div>
+<div class="step"><span class="step-num">4</span>Driver akan hilang dari tabel bulan berikutnya. Data lama tetap aman.</div>
+
+<div class="box box-info">
+<b>&#8505; Catatan:</b> Driver yang di-resign <b>tidak dihapus</b> dari sistem, hanya disembunyikan. Kalau masuk kerja lagi, tinggal kosongkan kolom Resign dan klik Simpan.
+</div>
+
+<h2 id="export">7. Export ke Excel</h2>
+<p>Untuk membuat file Excel dari data absensi (bisa diprint atau dikirim via email/WhatsApp).</p>
+
+<div class="step"><span class="step-num">1</span>Tap tombol <span class="btn-mock b-orange">&#128228; Export Excel</span>.</div>
+<div class="step"><span class="step-num">2</span>Muncul kotak dialog Export.</div>
+<div class="step"><span class="step-num">3</span>Pilih <b>Bulan</b> dan <b>Tahun</b> (default: bulan sekarang).</div>
+<div class="step"><span class="step-num">4</span>Kalau mau rentang tanggal tertentu, centang <b>Pakai rentang tanggal</b>, isi <b>Dari</b> dan <b>Sampai</b>.</div>
+<div class="step"><span class="step-num">5</span>Tap <span class="btn-mock b-orange">&#128190; Download Excel</span>.</div>
+<div class="step"><span class="step-num">6</span>File otomatis ter-download (cek di folder Download tablet).</div>
+
+<div class="box box-info">
+<b>&#128161; Contoh:</b> Untuk laporan bulanan Oktober 2026, pilih Bulan=OKTOBER, Tahun=2026, klik Download. Untuk laporan 1&ndash;15 Oktober saja, centang range dan isi tanggalnya.
+</div>
+
+<h2 id="print">8. Print / Cetak</h2>
+<p>Ada 2 cara print:</p>
+
+<h3>Cara 1: Print bulan yang sedang tampil</h3>
+<div class="step"><span class="step-num">1</span>Pastikan bulan yang tampil sesuai keinginan (misal OKTOBER 2026).</div>
+<div class="step"><span class="step-num">2</span>Tap tombol <span class="btn-mock b-orange">&#128424; Print</span>.</div>
+<div class="step"><span class="step-num">3</span>Muncul preview print.</div>
+<div class="step"><span class="step-num">4</span>Pilih printer, atau pilih <b>Save as PDF</b> untuk simpan file.</div>
+<div class="step"><span class="step-num">5</span>Tap <b>Print</b> / <b>Save</b>.</div>
+
+<h3>Cara 2: Print range tanggal (misal 1&ndash;15 Okt saja)</h3>
+<div class="step"><span class="step-num">1</span>Tap <span class="btn-mock b-orange">&#128228; Export Excel</span>.</div>
+<div class="step"><span class="step-num">2</span>Centang <b>Pakai rentang tanggal</b>, isi <b>Dari</b> dan <b>Sampai</b>.</div>
+<div class="step"><span class="step-num">3</span>Tap <span class="btn-mock b-gray">&#128424; Print Range Ini</span> (tombol abu-abu di bawah Download Excel).</div>
+<div class="step"><span class="step-num">4</span>Preview print akan muncul dengan data range tersebut.</div>
+
+<h2 id="ringkasan">9. Ringkasan Kinerja</h2>
+<p>Fitur ini menghitung <b>durasi kerja</b> setiap driver (jam IN dikurangi jam OUT). Sangat berguna untuk menilai kinerja driver.</p>
+
+<div class="step"><span class="step-num">1</span>Tap tombol <span class="btn-mock b-ringkasan">&#9201; Ringkasan</span>.</div>
+<div class="step"><span class="step-num">2</span>Pilih <b>Bulan</b> dan <b>Tahun</b>.</div>
+<div class="step"><span class="step-num">3</span>Kalau mau range tanggal (misal 1&ndash;15 Okt), centang <b>Pakai range tanggal</b> dan isi <b>Dari</b> &amp; <b>Sampai</b>.</div>
+<div class="step"><span class="step-num">4</span>Tap <span class="btn-mock b-ringkasan">&#128269; Tampilkan</span>.</div>
+<div class="step"><span class="step-num">5</span>Akan muncul tabel durasi per driver per tanggal.</div>
+<div class="step"><span class="step-num">6</span>Kalau mau simpan ke Excel, tap <span class="btn-mock b-green">&#128190; Export XLSX</span>.</div>
+
+<h3>Cara Membaca Hasil Ringkasan:</h3>
+<table>
+<tr><th>Kolom / Tanda</th><th>Artinya</th></tr>
+<tr><td><b>8:15</b></td><td>Driver bekerja 8 jam 15 menit hari itu</td></tr>
+<tr><td><b>?</b> (latar merah)</td><td>Jam OUT atau IN tidak lengkap</td></tr>
+<tr><td>Kosong</td><td>Driver tidak bekerja hari itu</td></tr>
+<tr><td>Kolom <b>TOTAL</b> (hijau)</td><td>Total jam kerja driver selama periode</td></tr>
+<tr><td><b>GRAND TOTAL</b> (bawah)</td><td>Total seluruh driver selama periode</td></tr>
+<tr><td>Header bulan (ungu)</td><td>Kalau range lintas bulan, header dipisah per bulan</td></tr>
+</table>
+
+<div class="box box-info">
+<b>&#128161; Contoh:</b> Driver VIRLA tanggal 1 Okt: OUT=07:30, IN=15:45 &rarr; ringkasan menampilkan 8:15. Total kolom kanan menunjukkan akumulasi seluruh bulan.
+</div>
+
+<h2 id="matrix">10. Sinkronisasi Matrix</h2>
+<p>Fitur ini untuk admin yang mau edit data di Google Sheets (dari PC) dengan tampilan seperti Excel.</p>
+
+<h3>&#128202; Matrix &mdash; HTML &rarr; Google Sheets</h3>
+<p>Kalau kamu sudah input banyak data di tablet, dan mau admin lihat di Google Sheets dalam format Excel:</p>
+<div class="step"><span class="step-num">1</span>Tap <span class="btn-mock b-purple">&#128202; Matrix</span>.</div>
+<div class="step"><span class="step-num">2</span>Konfirmasi &rarr; tunggu beberapa detik.</div>
+<div class="step"><span class="step-num">3</span>Buka Google Sheets di PC &rarr; akan muncul sheet baru "Matrix".</div>
+
+<h3>&#128229; Upload Matrix &mdash; Google Sheets &rarr; HTML</h3>
+<p>Kalau admin sudah edit di sheet "Matrix" dari PC, mau bawa perubahan ke tablet:</p>
+<div class="step"><span class="step-num">1</span>Pastikan admin sudah selesai edit di Google Sheets.</div>
+<div class="step"><span class="step-num">2</span>Di tablet, tap <span class="btn-mock b-teal">&#128229; Upload Matrix</span>.</div>
+<div class="step"><span class="step-num">3</span>Konfirmasi &rarr; tunggu notifikasi "Sync dari Matrix selesai".</div>
+<div class="step"><span class="step-num">4</span>Tabel di tablet otomatis refresh dengan data terbaru.</div>
+
+<div class="box box-warning">
+<b>&#9888; Hati-hati:</b> Tombol Upload Matrix akan <b>menimpa</b> data di sheet "Data" dengan isi sheet "Matrix". Pastikan sheet "Matrix" sudah benar sebelum upload.
+</div>
+
+<h2 id="offline">11. Mode Offline (Kalau WiFi Mati)</h2>
+<p>Aplikasi tetap bisa dipakai walau WiFi mati. Data disimpan sementara di tablet, lalu otomatis dikirim ke Google Sheets saat WiFi nyala lagi.</p>
+
+<h3>Cara Tahu Sedang Offline:</h3>
+<p>Lihat badge di kanan atas: <span class="btn-mock b-red" style="padding:2px 8px;font-size:11px;">OFFLINE</span> (merah).</p>
+
+<h3>Apa yang Bisa Dilakukan Saat Offline:</h3>
+<ul>
+<li>&#9989; Input jam OUT/IN driver (tetap bisa)</li>
+<li>&#9989; Lihat data lama (dari cache tablet)</li>
+<li>&#10060; Tambah/ubah driver (butuh internet)</li>
+<li>&#10060; Export Excel (butuh internet)</li>
+<li>&#10060; Buat Matrix (butuh internet)</li>
+</ul>
+
+<h3>Apa yang Terjadi:</h3>
+<ul>
+<li>Saat offline: kotak input akan berkedip <span style="background:#FFE5B4;padding:2px 6px;border-radius:3px;">oranye</span> = data disimpan di antrian</li>
+<li>Badge jadi <span class="btn-mock b-orange" style="padding:2px 8px;font-size:11px;">PENDING 3</span> = ada 3 data belum terkirim</li>
+<li>Saat WiFi nyala: badge <span class="btn-mock b-cyan" style="padding:2px 8px;font-size:11px;">SYNC...</span> &rarr; data otomatis terkirim</li>
+<li>Setelah selesai: badge kembali <span class="btn-mock b-green" style="padding:2px 8px;font-size:11px;">ONLINE</span></li>
+</ul>
+
+<div class="box box-success">
+<b>&#9989; Data Anda aman!</b> Selama tidak menghapus cache Chrome, data offline akan tersimpan sampai berhasil terkirim.
+</div>
+
+<h2 id="trouble">12. Kalau Ada Masalah</h2>
+
+<table>
+<tr><th>Masalah</th><th>Solusi</th></tr>
+<tr>
+<td>Tabel tidak muncul / kosong</td>
+<td>1. Cek koneksi WiFi.<br>2. Tap <span class="btn-mock b-cyan" style="padding:2px 6px;font-size:11px;">&#128260; Sync</span>.<br>3. Kalau masih kosong, tutup Chrome, buka lagi.</td>
+</tr>
+<tr>
+<td>Tulisan ONLINE tapi data tidak muncul</td>
+<td>Tekan Ctrl + Shift + R (hard refresh) atau tutup-buka aplikasi.</td>
+</tr>
+<tr>
+<td>Input jam tidak tersimpan</td>
+<td>Cek badge: kalau OFFLINE, tunggu WiFi nyala. Data akan otomatis terkirim.</td>
+</tr>
+<tr>
+<td>Tombol tidak berfungsi</td>
+<td>Tutup aplikasi, buka lagi. Kalau perlu restart tablet.</td>
+</tr>
+<tr>
+<td>Data driver tidak muncul di tablet</td>
+<td>Tap <span class="btn-mock b-cyan" style="padding:2px 6px;font-size:11px;">&#128260; Sync</span> &rarr; tunggu badge kembali ONLINE.</td>
+</tr>
+<tr>
+<td>Halaman tidak update setelah admin edit di PC</td>
+<td>Tekan Ctrl + Shift + R (Windows) atau clear cache Chrome &rarr; buka ulang.</td>
+</tr>
+<tr>
+<td>Baterai tablet cepat habis</td>
+<td>Tutup aplikasi saat tidak dipakai (swipe dari daftar aplikasi).</td>
+</tr>
+</table>
+
+<div class="box box-danger">
+<b>&#128680; Kalau Semua Cara Gagal:</b><br>
+1. Catat kejadian (tanggal, jam, apa yang dilakukan).<br>
+2. Screenshot layar.<br>
+3. Hubungi admin/IT support.<br>
+4. Sebagai cadangan: catat manual di kertas, input ulang nanti.
+</div>
+
+<h2 id="database">13. Lokasi Database (Info Teknis)</h2>
+<p>Bagian ini untuk admin, bukan untuk pemakaian sehari-hari. Tapi penting diketahui.</p>
+
+<h3>&#128451; Database Utama: Google Sheets</h3>
+<div class="box">
+<b>Nama file:</b> AbsensiDriver<br>
+<b>Pemilik:</b> Akun Google yang dipakai waktu setup awal (email admin)<br>
+<b>Cara akses:</b><br>
+1. Buka <a href="https://sheets.google.com" target="_blank">sheets.google.com</a><br>
+2. Login dengan akun Google pemilik<br>
+3. Cari file bernama "AbsensiDriver"
+</div>
+
+<p><b>Di dalam Google Sheets ada 3 sheet:</b></p>
+
+<table>
+<tr><th>Sheet</th><th>Isi</th><th>Fungsi</th></tr>
+<tr>
+<td><b>Data</b></td>
+<td>Nama | Tanggal | OUT | IN | LastUpdate</td>
+<td>Database utama &mdash; semua input dari tablet masuk ke sini</td>
+</tr>
+<tr>
+<td><b>Driver</b></td>
+<td>ID | Nama | TglAktif | TglResign | Urutan</td>
+<td>Daftar driver aktif &amp; resign</td>
+</tr>
+<tr>
+<td><b>Matrix</b></td>
+<td>Tabel seperti Excel (tanggal, OUT, IN)</td>
+<td>Tampilan alternatif, dibuat otomatis dari tombol Matrix</td>
+</tr>
+</table>
+
+<h3>&#128295; Backend: Google Apps Script</h3>
+<div class="box">
+<b>Nama project:</b> AbsensiDriver-Backend<br>
+<b>Lokasi:</b> <a href="https://script.google.com" target="_blank">script.google.com</a><br>
+<b>Fungsi:</b> Jembatan antara aplikasi tablet &amp; Google Sheets (baca/tulis data)<br>
+<b>Deploy sebagai:</b> Web App &mdash; URL panjang berakhiran /exec
+</div>
+
+<h3>&#127760; Frontend: GitHub Pages</h3>
+<div class="box">
+<b>Repository:</b> github.com/brownisdonat8-tech/absensi-driver<br>
+<b>URL aplikasi:</b> brownisdonat8-tech.github.io/absensi-driver/<br>
+<b>Fungsi:</b> Kode halaman web yang dibuka di tablet
+</div>
+
+<h3>&#128260; Alur Data</h3>
+<div class="flow">
+<span>Tablet (input jam)</span>
+<span class="arrow">&rarr;</span>
+<span>Apps Script (backend)</span>
+<span class="arrow">&rarr;</span>
+<span>Google Sheets (database)</span>
+<span class="arrow">&rarr;</span>
+<span>Admin lihat di PC</span>
+</div>
+
+<div class="box box-info">
+<b>&#128161; Analogi mudah:</b><br>
+Bayangkan <b>Google Sheets</b> sebagai <b>buku catatan besar</b> di kantor pusat. <b>Tablet</b> adalah <b>petugas yang mencatat</b>. <b>Apps Script</b> adalah <b>kurir</b> yang membawa catatan dari tablet ke buku besar. <b>GitHub</b> adalah <b>fotokopi halaman aplikasi</b> yang ada di setiap tablet.
+</div>
+
+<h3>&#128190; Backup &amp; Keamanan</h3>
+<ul>
+<li>Google Sheets menyimpan <b>version history</b> &mdash; bisa lihat/mengembalikan versi lama (File &rarr; Version history).</li>
+<li>Kalau tablet hilang/rusak, <b>data tetap aman</b> di Google Sheets.</li>
+<li>Untuk backup manual: buka Google Sheets &rarr; File &rarr; Download &rarr; Microsoft Excel (.xlsx).</li>
+<li>Jangan hapus akun Google pemilik, karena semua data ada di sana.</li>
+</ul>
+
+<div class="box box-success">
+<b>&#9989; Kesimpulan:</b> Data absensi tersimpan di Google Cloud (milik Google), bukan di tablet. Jadi seaman apapun tabletnya, data tetap aman.
+</div>
+
+<hr style="margin: 30px 0; border: none; border-top: 2px dashed #ddd;">
+<p style="text-align:center; color:#888; font-size:12px;">
+Panduan ini dibuat untuk memudahkan penggunaan aplikasi Absensi Driver.<br>
+Kalau ada pertanyaan, hubungi admin.<br>
+<b>Versi 1.0</b> &mdash; 2026
+</p>
+
+</main>
+</div>
+</body>
+</html>
