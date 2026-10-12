@@ -159,6 +159,7 @@ tbody td.driver-name {
     <button class="btn-orange" onclick="printHalaman()">&#128424; Print</button>
     <button onclick="bukaModalRingkasan()" style="background:#9333ea;color:white;border:none;padding:8px 12px;border-radius:5px;font-size:12px;font-weight:bold;cursor:pointer;">&#9201; Ringkasan</button>
     <a href="panduan.html" target="_blank" style="text-decoration:none;display:inline-block;"><button style="background:#dc3545;color:white;border:none;padding:8px 12px;border-radius:5px;font-size:12px;font-weight:bold;cursor:pointer;">&#10067; Panduan</button></a>
+    <button onclick="bukaModalAutoBackup()" style="background:#059669;color:white;border:none;padding:8px 12px;border-radius:5px;font-size:12px;font-weight:bold;cursor:pointer;">&#128190; Auto-Backup</button>
   </div>
 </header>
 
@@ -1147,6 +1148,40 @@ refreshData(true);
       </div>
       <div id="rngHasil" style="overflow:auto;max-height:50vh;border:1px solid #ccc;border-radius:5px;"></div>
       <div class="hint" style="margin-top:10px;">&#9432; Angka menunjukkan durasi kerja (IN - OUT). Format <b>8:15</b> = 8 jam 15 menit. Baris merah = belum lengkap. Kolom TOTAL = akumulasi jam kerja.</div>
+    </div>
+  </div>
+</div>
+<div class="modal-bg" id="modalAutoBackup">
+  <div class="modal">
+    <div class="modal-header" style="background:#059669;">
+      <span>&#128190; Auto-Backup ke Google Drive</span>
+      <button class="modal-close" onclick="tutupModal('modalAutoBackup')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:10px;padding:8px;background:#f0fdf4;border-radius:5px;font-size:12px;">
+        <label style="cursor:pointer;font-weight:bold;"><input type="checkbox" id="abEnabled" style="margin-right:6px;"> Aktifkan auto-backup harian</label>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div>
+          <label style="font-size:11px;font-weight:bold;">Jam (0-23)</label>
+          <input type="number" id="abJam" min="0" max="23" value="23" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:5px;font-size:13px;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:bold;">Menit (0-59)</label>
+          <input type="number" id="abMenit" min="0" max="59" value="0" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:5px;font-size:13px;box-sizing:border-box;">
+        </div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:11px;font-weight:bold;">Nama Folder di Drive</label>
+        <input type="text" id="abFolder" value="Backup_AbsensiDriver" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:5px;font-size:13px;box-sizing:border-box;">
+      </div>
+      <div id="abStatus" style="margin-bottom:12px;padding:10px;background:#f8f9fa;border-radius:5px;font-size:12px;color:#333;"></div>
+      <button onclick="simpanAutoBackup()" style="width:100%;padding:11px;background:#059669;color:white;border:none;border-radius:5px;font-size:14px;font-weight:bold;cursor:pointer;margin-bottom:6px;">&#128190; Simpan &amp; Aktifkan</button>
+      <button onclick="testAutoBackup()" style="width:100%;padding:11px;background:#17A2B8;color:white;border:none;border-radius:5px;font-size:14px;font-weight:bold;cursor:pointer;margin-bottom:6px;">&#128260; Test Sekarang</button>
+      <button onclick="matikanAutoBackup()" style="width:100%;padding:11px;background:#dc3545;color:white;border:none;border-radius:5px;font-size:14px;font-weight:bold;cursor:pointer;">&#10060; Matikan Auto-Backup</button>
+      <div class="hint" style="margin-top:10px;">
+        &#9432; File akan dibuat dengan nama <code>laporan_YYYYMMDD_HHMM.xlsx</code> berisi data bulan berjalan, tersimpan di folder Drive yang ditentukan. Auto-backup berjalan di server Google, <b>tablet/PC tidak perlu menyala</b>.
+      </div>
     </div>
   </div>
 </div>
