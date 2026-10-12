@@ -488,6 +488,131 @@ function exportXLSX() {
   XLSX.writeFile(wb, fname);
   toast('File Excel siap: ' + fname);
 }
+function bukaModalExport() {
+  document.getElementById('expBulan').value = curBulan;
+  document.getElementById('expTahun').value = curTahun;
+  document.getElementById('expPakaiRange').checked = false;
+  document.getElementById('rangeFields').style.display = 'none';
+  const tgl1 = curTahun + '-' + String(curBulan).padStart(2,'0') + '-01';
+  const lastDay = new Date(curTahun, curBulan, 0).getDate();
+  const tgl2 = curTahun + '-' + String(curBulan).padStart(2,'0') + '-' + String(lastDay).padStart(2,'0');
+  document.getElementById('expDari').value = tgl1;
+  document.getElementById('expSampai').value = tgl2;
+  document.getElementById('modalExport').classList.add('show');
+}
+
+function toggleRange() {
+  const c = document.getElementById('expPakaiRange').checked;
+  document.getElementById('rangeFields').style.display = c ? 'block' : 'none';
+}
+
+async function exportXLSXRange() {
+  if (typeof XLSX === 'undefined') { toast('Library XLSX belum siap, refresh halaman'); return; }
+  const bulan = Number(document.getElementById('expBulan').value);
+  const tahun = Number(document.getElementById('expTahun').value);
+  const pakaiRange = document.getElementById('expPakaiRange').checked;
+  const dariStr = document.getElementById('expDari').value;
+  const sampaiStr = document.getElementById('expSampai').value;
+  if (!bulan || !tahun) { toast('Bulan/tahun tidak valid'); return; }
+
+  toast('Menyiapkan data...');
+  let dataBulan = {};
+  let driversAll = drivers;
+  try {
+    const r = await api({ action: 'data', bulan: bulan, tahun: tahun });
+    if (r.ok) dataBulan = r.data || {};
+    if (bulan !== curBulan || tahun !== curTahun) {
+      const rd = await api({ action: 'drivers' });
+      if (rd.ok) driversAll = rd.drivers || [];
+    }
+  } catch (e) { toast('Gagal ambil data: ' + e.message); return; }
+
+  const tglAwal = new Date(tahun, bulan - 1, 1);
+  const tglAkhir = new Date(tahun, bulan, 0);
+  const daftarDriver = driversAll.filter(function(d) {
+    if (d.tglAktif) { const ta = new Date(d.tglAktif); if (ta > tglAkhir) return false; }
+    if (d.tglResign) { const tr = new Date(d.tglResign); if (tr < tglAwal) return false; }
+    return true;
+  });
+
+  let startDay = 1, endDay = new Date(tahun, bulan, 0).getDate();
+  if (pakaiRange) {
+    if (!dariStr || !sampaiStr) { toast('Isi tanggal dari & sampai'); return; }
+    const d1 = new Date(dariStr);
+    const d2 = new Date(sampaiStr);
+    if (d1.getFullYear() !== tahun || d1.getMonth() + 1 !== bulan || d2.getFullYear() !== tahun || d2.getMonth() + 1 !== bulan) {
+      toast('Rentang harus dalam bulan & tahun yang dipilih'); return;
+    }
+    startDay = d1.getDate();
+    endDay = d2.getDate();
+    if (startDay > endDay) { toast('Tanggal dari harus <= sampai'); return; }
+  }
+
+  const hariArr = [];
+  for (let d = startDay; d <= endDay; d++) hariArr.push(d);
+  const totalCol = 2 + hariArr.length * 2;
+  const blnShort = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+
+  const aoa = [];
+  const judul = ['KINERJA DRIVER BULAN ' + NAMA_BULAN[bulan] + ' ' + tahun];
+  if (pakaiRange) judul[0] += ' (Tgl ' + startDay + ' s/d ' + endDay + ')';
+  for (let i = 1; i < totalCol; i++) judul.push('');
+  aoa.push(judul);
+
+  const kosong = [];
+  for (let i = 0; i < totalCol; i++) kosong.push('');
+  aoa.push(kosong);
+
+  const headHari = ['NO', 'NAMA'];
+  for (let h = 0; h < hariArr.length; h++) {
+    const d = hariArr[h];
+    const tgl = new Date(tahun, bulan - 1, d);
+    const dow = (tgl.getDay() + 6) % 7;
+    const tglStr = String(d).padStart(2,'0') + '-' + blnShort[bulan-1] + '-' + String(tahun).slice(-2);
+    headHari.push(NAMA_HARI[dow] + ' ' + tglStr, '');
+  }
+  aoa.push(headHari);
+
+  const headOI = ['', ''];
+  for (let h = 0; h < hariArr.length; h++) headOI.push('OUT', 'IN');
+  aoa.push(headOI);
+
+  daftarDriver.forEach(function(drv, idx) {
+    const row = [idx + 1, drv.nama];
+    for (let h = 0; h < hariArr.length; h++) {
+      const d = hariArr[h];
+      const tgl = tahun + '-' + String(bulan).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+      const key = drv.nama + '|' + tgl;
+      const log = dataBulan[key] || { out: '', in: '' };
+      row.push(log.out || '', log.in || '');
+    }
+    aoa.push(row);
+  });
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!merges'] = [
+    {s: {r: 0, c: 0}, e: {r: 0, c: totalCol - 1}},
+    {s: {r: 2, c: 0}, e: {r: 3, c: 0}},
+    {s: {r: 2, c: 1}, e: {r: 3, c: 1}}
+  ];
+  for (let h = 0; h < hariArr.length; h++) {
+    const col = 2 + h * 2;
+    ws['!merges'].push({s: {r: 2, c: col}, e: {r: 2, c: col + 1}});
+  }
+  const wscols = [{wch: 5}, {wch: 15}];
+  for (let i = 0; i < hariArr.length * 2; i++) wscols.push({wch: 7});
+  ws['!cols'] = wscols;
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Absensi');
+  let fname = 'AbsensiDriver_' + NAMA_BULAN[bulan] + '_' + tahun;
+  if (pakaiRange) fname += '_tgl' + startDay + '-' + endDay;
+  fname += '.xlsx';
+  XLSX.writeFile(wb, fname);
+  tutupModal('modalExport');
+  toast('File Excel siap: ' + fname);
+}
+
 async function uploadMatrix() {
   if (!navigator.onLine) return toast('Butuh internet');
   if (!confirm('Tarik data dari sheet Matrix (Google Sheets) ke HTML?' + '\n\n' + 'Sheet Data akan di-update sesuai isi Matrix.')) return;
