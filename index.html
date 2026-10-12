@@ -65,6 +65,59 @@ td.cell input.queued { background: #FFE5B4; }
 .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; z-index: 9999; opacity: 0; transition: opacity 0.3s; pointer-events: none; max-width: 90%; text-align: center; }
 .toast.show { opacity: 1; }
 </style>
+<style id="sticky-fix">
+/* ===== FIX STICKY HEADER ===== */
+thead th {
+  background-color: #FFC000;
+  position: sticky;
+  top: 0;
+  vertical-align: middle;
+  z-index: 10;
+}
+thead tr:first-child th {
+  height: 40px;
+  box-sizing: border-box;
+}
+thead tr:first-child th:nth-child(1) {
+  left: 0 !important;
+  z-index: 40 !important;
+}
+thead tr:first-child th:nth-child(2) {
+  left: 28px !important;
+  z-index: 40 !important;
+  border-right: 2px solid #333 !important;
+}
+thead th.day-header {
+  z-index: 20;
+  padding: 3px 4px;
+  line-height: 1.15;
+  font-size: 10px;
+}
+thead th.day-header.monday {
+  background-color: #FF0000;
+  color: white;
+}
+thead tr:nth-child(2) th {
+  top: 40px;
+  z-index: 15;
+  vertical-align: middle;
+}
+thead th.out-col { background-color: #92D050; }
+thead th.in-col { background-color: #C6E0B4; }
+tbody td.no-col {
+  position: sticky;
+  left: 0;
+  z-index: 8;
+  background-color: #FFF2CC;
+}
+tbody td.driver-name {
+  position: sticky;
+  left: 28px;
+  z-index: 8;
+  background-color: #FFF2CC;
+  border-right: 2px solid #333;
+}
+</style>
 </head>
 <body>
 
