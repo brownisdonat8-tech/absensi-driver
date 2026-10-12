@@ -131,7 +131,7 @@ tbody td.driver-name {
     <button onclick="geserBulan(1)">&#8594;</button>
     <button class="btn-green" onclick="bukaModal('modalDriver')">&#9881; Driver</button>
     <button class="btn-cyan" onclick="refreshData()">&#8635; Sync</button>
-    <button class="btn-orange" onclick="exportCSV()">&#128190; Export</button>
+    <button class="btn-orange" onclick="exportXLSX()">&#128190; Export Excel</button>
     <button class="btn-purple" onclick="buatMatrix()">&#128202; Matrix</button>
   </div>
 </header>
@@ -413,35 +413,78 @@ setInterval(function() { if (navigator.onLine && getPending().length > 0) flushP
 setInterval(function() { if (navigator.onLine) refreshData(true); }, 300000);
 
 
-function exportCSV() {
+
+function exportXLSX() {
+  if (typeof XLSX === 'undefined') { toast('Library XLSX belum siap, coba refresh'); return; }
   const jmlHari = new Date(curTahun, curBulan, 0).getDate();
   const daftarDriver = driversUntukBulan(curBulan, curTahun);
-  let csv = 'KINERJA DRIVER BULAN ' + NAMA_BULAN[curBulan] + ' ' + curTahun + '\n\n';
-  csv += 'NO,NAMA';
-  for (let d = 1; d <= jmlHari; d++) csv += ',Tgl ' + d + ' OUT,Tgl ' + d + ' IN';
-  csv += '\n';
+  const blnShort = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+
+  const aoa = [];
+  const totalCol = 2 + jmlHari * 2;
+
+  // Baris 1: judul
+  const judul = ['KINERJA DRIVER BULAN ' + NAMA_BULAN[curBulan] + ' ' + curTahun];
+  for (let i = 1; i < totalCol; i++) judul.push('');
+  aoa.push(judul);
+
+  // Baris 2: kosong
+  const kosong = [];
+  for (let i = 0; i < totalCol; i++) kosong.push('');
+  aoa.push(kosong);
+
+  // Baris 3: header hari
+  const headHari = ['NO', 'NAMA'];
+  for (let d = 1; d <= jmlHari; d++) {
+    const tgl = new Date(curTahun, curBulan - 1, d);
+    const dow = (tgl.getDay() + 6) % 7;
+    const tglStr = String(d).padStart(2,'0') + '-' + blnShort[curBulan-1] + '-' + String(curTahun).slice(-2);
+    headHari.push(NAMA_HARI[dow] + ' ' + tglStr, '');
+  }
+  aoa.push(headHari);
+
+  // Baris 4: OUT/IN
+  const headOI = ['', ''];
+  for (let d = 1; d <= jmlHari; d++) headOI.push('OUT', 'IN');
+  aoa.push(headOI);
+
+  // Baris data
   daftarDriver.forEach(function(drv, idx) {
-    csv += (idx + 1) + ',' + drv.nama;
+    const row = [idx + 1, drv.nama];
     for (let d = 1; d <= jmlHari; d++) {
       const tgl = curTahun + '-' + String(curBulan).padStart(2,'0') + '-' + String(d).padStart(2,'0');
       const key = drv.nama + '|' + tgl;
       const log = logs[key] || { out: '', in: '' };
-      csv += ',"' + (log.out || '') + '","' + (log.in || '') + '"';
+      row.push(log.out || '', log.in || '');
     }
-    csv += '\n';
+    aoa.push(row);
   });
-  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'AbsensiDriver_' + NAMA_BULAN[curBulan] + '_' + curTahun + '.csv';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  toast('Export CSV didownload');
-}
 
+  // Buat workbook
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+  // Merge judul & header NO/NAMA
+  ws['!merges'] = [
+    {s: {r: 0, c: 0}, e: {r: 0, c: totalCol - 1}},
+    {s: {r: 2, c: 0}, e: {r: 3, c: 0}},
+    {s: {r: 2, c: 1}, e: {r: 3, c: 1}}
+  ];
+  for (let d = 0; d < jmlHari; d++) {
+    const col = 2 + d * 2;
+    ws['!merges'].push({s: {r: 2, c: col}, e: {r: 2, c: col + 1}});
+  }
+
+  // Lebar kolom
+  const wscols = [{wch: 5}, {wch: 15}];
+  for (let i = 0; i < jmlHari * 2; i++) wscols.push({wch: 7});
+  ws['!cols'] = wscols;
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Absensi');
+  const fname = 'AbsensiDriver_' + NAMA_BULAN[curBulan] + '_' + curTahun + '.xlsx';
+  XLSX.writeFile(wb, fname);
+  toast('File Excel siap: ' + fname);
+}
 async function buatMatrix() {
   if (!navigator.onLine) return toast('Butuh internet');
   if (!confirm('Buat sheet "Matrix" di Google Sheets untuk bulan ' + NAMA_BULAN[curBulan] + ' ' + curTahun + '?')) return;
