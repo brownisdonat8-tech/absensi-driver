@@ -1046,6 +1046,76 @@ async function uploadMatrix() {
   } catch (e) { toast('Gagal: ' + e.message); }
 }
 
+async function bukaModalAutoBackup() {
+  document.getElementById('modalAutoBackup').classList.add('show');
+  document.getElementById('abStatus').innerHTML = 'Memuat status...';
+  try {
+    const r = await api({ action: 'status_autobackup' });
+    if (r.ok) {
+      document.getElementById('abEnabled').checked = r.enabled;
+      if (r.jam) document.getElementById('abJam').value = r.jam;
+      if (r.menit) document.getElementById('abMenit').value = r.menit;
+      if (r.folder) document.getElementById('abFolder').value = r.folder;
+      let statusHtml = '<b>Status:</b> ' + (r.enabled ? '✅ Aktif' : '❌ Nonaktif');
+      if (r.lastTime) {
+        const tgl = new Date(r.lastTime);
+        statusHtml += '<br><b>Backup terakhir:</b> ' + tgl.toLocaleString('id-ID');
+        statusHtml += '<br><b>Hasil:</b> ' + (r.lastStatus || '-');
+        if (r.lastFile) statusHtml += '<br><b>File:</b> ' + r.lastFile;
+        if (r.lastUrl) statusHtml += '<br><a href="' + r.lastUrl + '" target="_blank" style="color:#059669;">Buka di Drive &#8599;</a>';
+      } else {
+        statusHtml += '<br><i>Belum pernah backup</i>';
+      }
+      document.getElementById('abStatus').innerHTML = statusHtml;
+    } else {
+      document.getElementById('abStatus').innerHTML = 'Error: ' + (r.error || 'tidak diketahui');
+    }
+  } catch(e) {
+    document.getElementById('abStatus').innerHTML = 'Error: ' + e.message;
+  }
+}
+
+async function simpanAutoBackup() {
+  const enabled = document.getElementById('abEnabled').checked;
+  const jam = Number(document.getElementById('abJam').value);
+  const menit = Number(document.getElementById('abMenit').value);
+  const folder = document.getElementById('abFolder').value.trim() || 'Backup_AbsensiDriver';
+  if (!enabled) { toast('Centang "Aktifkan auto-backup" dulu'); return; }
+  if (isNaN(jam) || jam < 0 || jam > 23) { toast('Jam harus 0-23'); return; }
+  if (isNaN(menit) || menit < 0 || menit > 59) { toast('Menit harus 0-59'); return; }
+  toast('Menyimpan setting...');
+  try {
+    const r = await api({ action: 'setup_autobackup', jam: jam, menit: menit, folder: folder });
+    if (r.ok) {
+      toast('✅ ' + r.msg);
+      setTimeout(bukaModalAutoBackup, 800);
+    } else toast('Gagal: ' + r.error);
+  } catch(e) { toast('Error: ' + e.message); }
+}
+
+async function matikanAutoBackup() {
+  if (!confirm('Matikan auto-backup harian?')) return;
+  try {
+    const r = await api({ action: 'hapus_autobackup' });
+    if (r.ok) {
+      toast('Auto-backup dimatikan');
+      setTimeout(bukaModalAutoBackup, 800);
+    } else toast('Gagal: ' + r.error);
+  } catch(e) { toast('Error: ' + e.message); }
+}
+
+async function testAutoBackup() {
+  if (!confirm('Buat file backup sekarang? (5-10 detik)')) return;
+  toast('Membuat file backup...');
+  try {
+    const r = await api({ action: 'test_autobackup' });
+    if (r.ok) {
+      toast('✅ Berhasil: ' + r.file);
+      setTimeout(bukaModalAutoBackup, 1200);
+    } else toast('Gagal: ' + (r.error || 'tidak diketahui'));
+  } catch(e) { toast('Error: ' + e.message); }
+}
+
 async function buatMatrix() {
   if (!navigator.onLine) return toast('Butuh internet');
   if (!confirm('Buat sheet "Matrix" di Google Sheets untuk bulan ' + NAMA_BULAN[curBulan] + ' ' + curTahun + '?')) return;
