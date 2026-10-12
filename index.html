@@ -1037,7 +1037,7 @@ async function uploadMatrix() {
   try {
     const r = await api({ action: 'sync_dari_matrix' });
     if (r.ok) {
-      toast('OK: ' + r.msg + ' (added: ' + r.added + ', updated: ' + r.updated + ')');
+      toast('OK: ' + r.msg + ' | +' + r.added + ' baru, ' + r.updated + ' update, ' + (r.cleared || 0) + ' dikosongkan');
       await refreshData(true);
     } else {
       toast('Gagal: ' + r.error);
