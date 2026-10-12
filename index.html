@@ -135,6 +135,7 @@ tbody td.driver-name {
     <button class="btn-cyan" onclick="refreshData()">&#8635; Sync</button>
     <button class="btn-orange" onclick="exportXLSX()">&#128190; Export Excel</button>
     <button class="btn-purple" onclick="buatMatrix()">&#128202; Matrix</button>
+    <button class="btn-cyan" onclick="uploadMatrix()" style="background:#0d9488;">&#128229; Upload Matrix</button>
   </div>
 </header>
 
@@ -487,6 +488,21 @@ function exportXLSX() {
   XLSX.writeFile(wb, fname);
   toast('File Excel siap: ' + fname);
 }
+async function uploadMatrix() {
+  if (!navigator.onLine) return toast('Butuh internet');
+  if (!confirm('Tarik data dari sheet Matrix (Google Sheets) ke HTML?' + '\n\n' + 'Sheet Data akan di-update sesuai isi Matrix.')) return;
+  toast('Mengambil data dari Matrix...');
+  try {
+    const r = await api({ action: 'sync_dari_matrix' });
+    if (r.ok) {
+      toast('OK: ' + r.msg + ' (added: ' + r.added + ', updated: ' + r.updated + ')');
+      await refreshData(true);
+    } else {
+      toast('Gagal: ' + r.error);
+    }
+  } catch (e) { toast('Gagal: ' + e.message); }
+}
+
 async function buatMatrix() {
   if (!navigator.onLine) return toast('Butuh internet');
   if (!confirm('Buat sheet "Matrix" di Google Sheets untuk bulan ' + NAMA_BULAN[curBulan] + ' ' + curTahun + '?')) return;
