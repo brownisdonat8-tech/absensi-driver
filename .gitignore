@@ -6,3 +6,4 @@ dist/
 *.db
 instance/
 AbsensiDriver.html
+INFO_PRIVATE.txt

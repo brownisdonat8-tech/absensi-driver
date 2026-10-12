@@ -357,83 +357,95 @@ Buka Chrome &rarr; ketik di address bar: <code>brownisdonat8-tech.github.io/abse
 4. Sebagai cadangan: catat manual di kertas, input ulang nanti.
 </div>
 
-<h2 id="database">13. Lokasi Database (Info Teknis)</h2>
-<p>Bagian ini untuk admin, bukan untuk pemakaian sehari-hari. Tapi penting diketahui.</p>
+<h2 id="database">13. Kartu Identitas Project (Lokasi Semua Komponen)</h2>
+<p>Bagian ini adalah <b>peta lengkap</b> project. Kalau nanti lupa username, URL, atau di mana file tersimpan, buka halaman ini.</p>
 
-<h3>&#128451; Database Utama: Google Sheets</h3>
-<div class="box">
-<b>Nama file:</b> AbsensiDriver<br>
-<b>Pemilik:</b> Akun Google yang dipakai waktu setup awal (email admin)<br>
-<b>Cara akses:</b><br>
-1. Buka <a href="https://sheets.google.com" target="_blank">sheets.google.com</a><br>
-2. Login dengan akun Google pemilik<br>
-3. Cari file bernama "AbsensiDriver"
+<div class="box box-warning">
+<b>&#9888; JANGAN taruh password/token di halaman ini</b> karena file ini di-host publik. Untuk password/token, lihat file <code>INFO_PRIVATE.txt</code> di folder project PC (tidak ikut ke-push).
 </div>
 
-<p><b>Di dalam Google Sheets ada 3 sheet:</b></p>
-
+<h3>&#128451; A. Google Sheets (Database Utama)</h3>
 <table>
-<tr><th>Sheet</th><th>Isi</th><th>Fungsi</th></tr>
-<tr>
-<td><b>Data</b></td>
-<td>Nama | Tanggal | OUT | IN | LastUpdate</td>
-<td>Database utama &mdash; semua input dari tablet masuk ke sini</td>
-</tr>
-<tr>
-<td><b>Driver</b></td>
-<td>ID | Nama | TglAktif | TglResign | Urutan</td>
-<td>Daftar driver aktif &amp; resign</td>
-</tr>
-<tr>
-<td><b>Matrix</b></td>
-<td>Tabel seperti Excel (tanggal, OUT, IN)</td>
-<td>Tampilan alternatif, dibuat otomatis dari tombol Matrix</td>
-</tr>
+<tr><th style="width:30%;">Item</th><th>Detail</th></tr>
+<tr><td><b>Nama file</b></td><td>AbsensiDriver</td></tr>
+<tr><td><b>Akun Google pemilik</b></td><td><i>(isi email Google yang dipakai setup)</i></td></tr>
+<tr><td><b>Spreadsheet ID</b></td><td><code>1_LBOig_sYEGOLYdw4g1QfjvqAUou4fC_9qxI2CynjFY</code></td></tr>
+<tr><td><b>URL langsung</b></td><td><a href="https://docs.google.com/spreadsheets/d/1_LBOig_sYEGOLYdw4g1QfjvqAUou4fC_9qxI2CynjFY/edit" target="_blank">Klik untuk buka Google Sheets</a></td></tr>
+<tr><td><b>Sheet di dalamnya</b></td><td><code>Data</code>, <code>Driver</code>, <code>Matrix</code></td></tr>
+</table>
+<p><b>Cara akses:</b> Buka <a href="https://sheets.google.com" target="_blank">sheets.google.com</a> &rarr; login dengan akun Google di atas &rarr; cari file "AbsensiDriver".</p>
+
+<div class="box box-danger">
+<b>&#128680; PENTING:</b> Kalau akun Google pemilik dihapus, semua data ikut hilang. Untuk keamanan, <b>share file ke email cadangan</b> sebagai Editor (buka Sheets &rarr; tombol Share kanan atas &rarr; tambah email backup).
+</div>
+
+<h3>&#128295; B. Google Apps Script (Backend)</h3>
+<table>
+<tr><th style="width:30%;">Item</th><th>Detail</th></tr>
+<tr><td><b>Nama project</b></td><td>AbsensiDriver-Backend</td></tr>
+<tr><td><b>Editor URL</b></td><td><a href="https://script.google.com" target="_blank">script.google.com</a> &rarr; pilih project "AbsensiDriver-Backend"</td></tr>
+<tr><td><b>Akun</b></td><td>Sama dengan pemilik Google Sheets</td></tr>
+<tr><td><b>Web App URL</b></td><td><code style="word-break:break-all;">https://script.google.com/macros/s/AKfycbzIHgddK6a0ttXIDgdW41uET1mRlZBe3OBsNf6CfGXUyrMyJ5OjfazoKEFwoM1U3wQq9Q/exec</code></td></tr>
+<tr><td><b>Deploy ID</b></td><td><code>AKfycbzIHgddK6a0ttXIDgdW41uET1mRlZBe3OBsNf6CfGXUyrMyJ5OjfazoKEFwoM1U3wQq9Q</code></td></tr>
+</table>
+<p><b>Fungsi:</b> Jembatan antara tablet &amp; Google Sheets. Menerima perintah dari tablet, mengambil/menulis data ke Sheets.</p>
+<p><b>Cara update kode:</b> Buka script.google.com &rarr; edit &rarr; Save &rarr; Deploy &rarr; Manage deployments &rarr; ikon pensil &rarr; Version: <b>New version</b> &rarr; Deploy.</p>
+
+<h3>&#127760; C. GitHub (Hosting Aplikasi Web)</h3>
+<table>
+<tr><th style="width:30%;">Item</th><th>Detail</th></tr>
+<tr><td><b>Username GitHub</b></td><td><code>brownisdonat8-tech</code></td></tr>
+<tr><td><b>Akun GitHub</b></td><td>Akun kantor (khusus project absensi)</td></tr>
+<tr><td><b>Repository</b></td><td><code>absensi-driver</code></td></tr>
+<tr><td><b>URL Repo</b></td><td><a href="https://github.com/brownisdonat8-tech/absensi-driver" target="_blank">https://github.com/brownisdonat8-tech/absensi-driver</a></td></tr>
+<tr><td><b>URL Aplikasi</b></td><td><a href="https://brownisdonat8-tech.github.io/absensi-driver/" target="_blank">https://brownisdonat8-tech.github.io/absensi-driver/</a></td></tr>
+<tr><td><b>Branch</b></td><td><code>main</code></td></tr>
+<tr><td><b>Personal Access Token</b></td><td>&#128274; Tersimpan di file <code>INFO_PRIVATE.txt</code> (PC) &amp; di <code>.git/config</code> folder project</td></tr>
+</table>
+<p><b>File yang di-upload ke GitHub:</b> <code>index.html</code>, <code>panduan.html</code>, <code>.gitignore</code>. File lain (app.py, dll) tidak ke-push karena sudah diblokir di <code>.gitignore</code>.</p>
+
+<h3>&#128193; D. Folder Project di PC</h3>
+<table>
+<tr><th style="width:30%;">Item</th><th>Detail</th></tr>
+<tr><td><b>Lokasi folder</b></td><td><code>C:\Projects\DriverAttendance</code></td></tr>
+<tr><td><b>File utama</b></td><td><code>index.html</code> (aplikasi tablet)<br><code>panduan.html</code> (halaman ini)<br><code>app.py</code>, <code>models.py</code> (server lokal lama, tidak dipakai lagi)<br><code>.env</code> (config token — jangan di-share)</td></tr>
+<tr><td><b>Backup kode</b></td><td>Folder <code>build/</code>, <code>dist/</code> (file .exe lama, sudah tidak dipakai)</td></tr>
 </table>
 
-<h3>&#128295; Backend: Google Apps Script</h3>
-<div class="box">
-<b>Nama project:</b> AbsensiDriver-Backend<br>
-<b>Lokasi:</b> <a href="https://script.google.com" target="_blank">script.google.com</a><br>
-<b>Fungsi:</b> Jembatan antara aplikasi tablet &amp; Google Sheets (baca/tulis data)<br>
-<b>Deploy sebagai:</b> Web App &mdash; URL panjang berakhiran /exec
-</div>
-
-<h3>&#127760; Frontend: GitHub Pages</h3>
-<div class="box">
-<b>Repository:</b> github.com/brownisdonat8-tech/absensi-driver<br>
-<b>URL aplikasi:</b> brownisdonat8-tech.github.io/absensi-driver/<br>
-<b>Fungsi:</b> Kode halaman web yang dibuka di tablet
-</div>
-
-<h3>&#128260; Alur Data</h3>
+<h3>&#128260; E. Alur Data</h3>
 <div class="flow">
-<span>Tablet (input jam)</span>
+<span>Tablet input</span>
 <span class="arrow">&rarr;</span>
-<span>Apps Script (backend)</span>
+<span>Apps Script</span>
 <span class="arrow">&rarr;</span>
-<span>Google Sheets (database)</span>
+<span>Google Sheets</span>
 <span class="arrow">&rarr;</span>
 <span>Admin lihat di PC</span>
 </div>
 
-<div class="box box-info">
-<b>&#128161; Analogi mudah:</b><br>
-Bayangkan <b>Google Sheets</b> sebagai <b>buku catatan besar</b> di kantor pusat. <b>Tablet</b> adalah <b>petugas yang mencatat</b>. <b>Apps Script</b> adalah <b>kurir</b> yang membawa catatan dari tablet ke buku besar. <b>GitHub</b> adalah <b>fotokopi halaman aplikasi</b> yang ada di setiap tablet.
-</div>
+<h3>&#128203; F. Checklist Kalau Lupa Akun / URL</h3>
+<table>
+<tr><th>Kalau lupa...</th><th>Buka di sini</th></tr>
+<tr><td>Akun Google pemilik data</td><td>Section 13.A di atas</td></tr>
+<tr><td>URL Google Sheets</td><td>Section 13.A (klik "Buka Google Sheets")</td></tr>
+<tr><td>Username GitHub</td><td>Section 13.C — <code>brownisdonat8-tech</code></td></tr>
+<tr><td>URL aplikasi tablet</td><td>Section 13.C — <code>brownisdonat8-tech.github.io/absensi-driver/</code></td></tr>
+<tr><td>Lokasi file di PC</td><td>Section 13.D — <code>C:\Projects\DriverAttendance</code></td></tr>
+<tr><td>Web App URL Apps Script</td><td>Section 13.B</td></tr>
+<tr><td>Token / password</td><td>&#128274; File <code>INFO_PRIVATE.txt</code> di folder PC (tidak di-push)</td></tr>
+</table>
 
-<h3>&#128190; Backup &amp; Keamanan</h3>
+<h3>&#128274; G. File Sensitif (di Luar GitHub)</h3>
+<p>File ini <b>TIDAK di-upload ke GitHub</b> karena berisi kredensial. Disimpan di PC saja:</p>
 <ul>
-<li>Google Sheets menyimpan <b>version history</b> &mdash; bisa lihat/mengembalikan versi lama (File &rarr; Version history).</li>
-<li>Kalau tablet hilang/rusak, <b>data tetap aman</b> di Google Sheets.</li>
-<li>Untuk backup manual: buka Google Sheets &rarr; File &rarr; Download &rarr; Microsoft Excel (.xlsx).</li>
-<li>Jangan hapus akun Google pemilik, karena semua data ada di sana.</li>
+<li><code>INFO_PRIVATE.txt</code> &mdash; berisi token GitHub, token Telegram, dll</li>
+<li><code>.env</code> &mdash; config environment server lokal</li>
+<li><code>.git/config</code> &mdash; berisi URL remote dengan token (hati-hati kalau copy folder ke PC lain)</li>
 </ul>
 
 <div class="box box-success">
-<b>&#9989; Kesimpulan:</b> Data absensi tersimpan di Google Cloud (milik Google), bukan di tablet. Jadi seaman apapun tabletnya, data tetap aman.
+<b>&#9989; Tips:</b> Cetak halaman ini (Ctrl + P) dan tempel di sekitar pos security atau simpan PDF-nya. Kalau nanti ada pergantian petugas IT, tinggal serahkan halaman ini.
 </div>
-
 <hr style="margin: 30px 0; border: none; border-top: 2px dashed #ddd;">
 <p style="text-align:center; color:#888; font-size:12px;">
 Panduan ini dibuat untuk memudahkan penggunaan aplikasi Absensi Driver.<br>
