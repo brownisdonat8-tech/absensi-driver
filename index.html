@@ -581,9 +581,11 @@ async function exportXLSXRange() {
     if (rd.ok) driversAll = rd.drivers || [];
   } catch(e) {}
 
+  const endStr = endDate.getFullYear() + '-' + String(endDate.getMonth()+1).padStart(2,'0') + '-' + String(endDate.getDate()).padStart(2,'0');
+  const startStr = startDate.getFullYear() + '-' + String(startDate.getMonth()+1).padStart(2,'0') + '-' + String(startDate.getDate()).padStart(2,'0');
   const daftarDriver = driversAll.filter(function(d) {
-    if (d.tglAktif) { const ta = new Date(d.tglAktif); if (ta > endDate) return false; }
-    if (d.tglResign) { const tr = new Date(d.tglResign); if (tr < startDate) return false; }
+    if (d.tglAktif && d.tglAktif > endStr) return false;
+    if (d.tglResign && d.tglResign < startStr) return false;
     return true;
   });
 
@@ -741,9 +743,11 @@ async function cetakKeIframe(bulan, tahun, dariStr, sampaiStr) {
     if (rd.ok) driversAll = rd.drivers || [];
   } catch(e) {}
 
+  const d2Str = d2.getFullYear() + '-' + String(d2.getMonth()+1).padStart(2,'0') + '-' + String(d2.getDate()).padStart(2,'0');
+  const d1Str = d1.getFullYear() + '-' + String(d1.getMonth()+1).padStart(2,'0') + '-' + String(d1.getDate()).padStart(2,'0');
   const daftarDriver = driversAll.filter(function(d) {
-    if (d.tglAktif) { const ta = new Date(d.tglAktif); if (ta > d2) return false; }
-    if (d.tglResign) { const tr = new Date(d.tglResign); if (tr < d1) return false; }
+    if (d.tglAktif && d.tglAktif > d2Str) return false;
+    if (d.tglResign && d.tglResign < d1Str) return false;
     return true;
   });
 
@@ -862,9 +866,11 @@ async function renderRingkasan() {
     if (rd.ok) driversAll = rd.drivers || [];
   } catch(e) {}
 
+  const endStr = endDate.getFullYear() + '-' + String(endDate.getMonth()+1).padStart(2,'0') + '-' + String(endDate.getDate()).padStart(2,'0');
+  const startStr = startDate.getFullYear() + '-' + String(startDate.getMonth()+1).padStart(2,'0') + '-' + String(startDate.getDate()).padStart(2,'0');
   const daftarDriver = driversAll.filter(function(d) {
-    if (d.tglAktif) { const ta = new Date(d.tglAktif); if (ta > endDate) return false; }
-    if (d.tglResign) { const tr = new Date(d.tglResign); if (tr < startDate) return false; }
+    if (d.tglAktif && d.tglAktif > endStr) return false;
+    if (d.tglResign && d.tglResign < startStr) return false;
     return true;
   });
 
