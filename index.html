@@ -122,6 +122,26 @@ tbody td.driver-name {
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style id="print-style">
+@media print {
+  @page { size: A4 landscape; margin: 0.5cm; }
+  header, .toolbar, .status-badge, .toast, .modal-bg, .info, button { display: none !important; }
+  body { display: block; font-size: 10px; padding: 0; margin: 0; background: white; }
+  .table-wrap { overflow: visible !important; max-height: none !important; height: auto !important; }
+  table { font-size: 8px !important; page-break-inside: auto; }
+  th, td { padding: 1px 2px !important; border: 1px solid #333 !important; }
+  th.driver-col, th.day-header, th.out-col, th.in-col, td.no-col, td.driver-name {
+    position: static !important; left: auto !important; top: auto !important; z-index: auto !important;
+  }
+  td.cell input { display: none !important; }
+  td.cell .print-val { display: inline-block !important; font-size: 8px !important; padding: 1px !important; }
+  h1 { font-size: 12px !important; margin: 4px 0 !important; }
+  .print-header { display: block !important; text-align: center; font-weight: bold; font-size: 12px; margin-bottom: 4px; }
+  tr { page-break-inside: avoid; }
+}
+.print-val { display: none; }
+.print-header { display: none; }
+</style>
 </head>
 <body>
 
@@ -136,6 +156,8 @@ tbody td.driver-name {
     <button class="btn-orange" onclick="bukaModalExport()">&#128190; Export Excel</button>
     <button class="btn-purple" onclick="buatMatrix()">&#128202; Matrix</button>
     <button class="btn-cyan" onclick="uploadMatrix()" style="background:#0d9488;">&#128229; Upload Matrix</button>
+    <button class="btn-orange" onclick="printHalaman()">&#128424; Print</button>
+    <button onclick="bukaModalRingkasan()" style="background:#9333ea;color:white;border:none;padding:8px 12px;border-radius:5px;font-size:12px;font-weight:bold;cursor:pointer;">&#9201; Ringkasan</button>
   </div>
 </header>
 
@@ -645,6 +667,302 @@ async function exportXLSXRange() {
   tutupModal('modalExport');
   toast('File Excel siap: ' + fname);
 }
+function hitungMenit(outStr, inStr) {
+  if (!outStr || !inStr) return null;
+  const p1 = String(outStr).split(':');
+  const p2 = String(inStr).split(':');
+  if (p1.length < 2 || p2.length < 2) return null;
+  const oh = Number(p1[0]), om = Number(p1[1]);
+  const ih = Number(p2[0]), im = Number(p2[1]);
+  if (isNaN(oh) || isNaN(om) || isNaN(ih) || isNaN(im)) return null;
+  let m = (ih * 60 + im) - (oh * 60 + om);
+  if (m < 0) m += 24 * 60;
+  return m;
+}
+
+function formatJamKerja(menit) {
+  if (menit === null || menit === undefined) return '';
+  const j = Math.floor(menit / 60);
+  const m = menit % 60;
+  return j + ':' + String(m).padStart(2, '0');
+}
+
+function printHalaman() {
+  document.querySelectorAll('td.cell input').forEach(function(inp) {
+    if (inp.nextElementSibling && inp.nextElementSibling.classList && inp.nextElementSibling.classList.contains('print-val')) return;
+    const span = document.createElement('span');
+    span.className = 'print-val';
+    span.textContent = inp.value ? inp.value : '--:--';
+    inp.parentNode.insertBefore(span, inp.nextSibling);
+  });
+  setTimeout(function() { window.print(); }, 100);
+}
+
+window.addEventListener('afterprint', function() {
+  document.querySelectorAll('.print-val').forEach(function(sp) { sp.remove(); });
+});
+
+function printRangeDariModal() {
+  const bulan = Number(document.getElementById('expBulan').value);
+  const tahun = Number(document.getElementById('expTahun').value);
+  const pakaiRange = document.getElementById('expPakaiRange').checked;
+  const dariStr = document.getElementById('expDari').value;
+  const sampaiStr = document.getElementById('expSampai').value;
+  if (!pakaiRange) { tutupModal('modalExport'); setTimeout(function(){ printHalaman(); }, 300); return; }
+  if (!dariStr || !sampaiStr) { toast('Isi tanggal dari & sampai'); return; }
+  cetakKeIframe(bulan, tahun, dariStr, sampaiStr);
+}
+
+async function cetakKeIframe(bulan, tahun, dariStr, sampaiStr) {
+  toast('Menyiapkan print...');
+  const d1 = new Date(dariStr + 'T00:00:00');
+  const d2 = new Date(sampaiStr + 'T00:00:00');
+  if (d1 > d2) { toast('Tanggal dari > sampai'); return; }
+
+  const bulanSet = [];
+  let cur = new Date(d1);
+  while (cur <= d2) {
+    const key = cur.getFullYear() + '-' + (cur.getMonth() + 1);
+    if (bulanSet.indexOf(key) === -1) bulanSet.push(key);
+    cur.setDate(cur.getDate() + 1);
+  }
+  const dataAll = {};
+  try {
+    for (let i = 0; i < bulanSet.length; i++) {
+      const parts = bulanSet[i].split('-');
+      const r = await api({ action: 'data', bulan: Number(parts[1]), tahun: Number(parts[0]) });
+      if (r.ok && r.data) for (const k in r.data) if (r.data.hasOwnProperty(k)) dataAll[k] = r.data[k];
+    }
+  } catch(e) { toast('Gagal ambil data'); return; }
+
+  let driversAll = drivers;
+  try {
+    const rd = await api({ action: 'drivers' });
+    if (rd.ok) driversAll = rd.drivers || [];
+  } catch(e) {}
+
+  const daftarDriver = driversAll.filter(function(d) {
+    if (d.tglAktif) { const ta = new Date(d.tglAktif); if (ta > d2) return false; }
+    if (d.tglResign) { const tr = new Date(d.tglResign); if (tr < d1) return false; }
+    return true;
+  });
+
+  const dateArr = [];
+  let cur2 = new Date(d1);
+  while (cur2 <= d2) { dateArr.push(new Date(cur2)); cur2.setDate(cur2.getDate() + 1); }
+
+  const blnShort = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+  const namaBulanArr = ['','JANUARI','FEBRUARI','MARET','APRIL','MEI','JUNI','JULI','AGUSTUS','SEPTEMBER','OKTOBER','NOVEMBER','DESEMBER'];
+
+  let html = '<html><head><meta charset="UTF-8"><title>Absensi Driver</title><style>';
+  html += '@page { size: A4 landscape; margin: 0.5cm; }';
+  html += 'body { font-family: Arial; font-size: 9px; margin: 4px; }';
+  html += 'h2 { text-align: center; font-size: 13px; margin: 4px 0; background: #FFC000; padding: 6px; }';
+  html += 'table { border-collapse: collapse; width: 100%; }';
+  html += 'th, td { border: 1px solid #333; padding: 1px 2px; text-align: center; font-size: 8px; }';
+  html += 'th { background: #FFC000; }';
+  html += 'th.monday { background: #FF0000; color: white; }';
+  html += 'th.out { background: #92D050; }';
+  html += 'th.in { background: #C6E0B4; }';
+  html += 'td.name { text-align: left; font-weight: bold; padding-left: 4px; background: #FFF2CC; }';
+  html += 'td.no { background: #FFF2CC; }';
+  html += '</style></head><body>';
+  html += '<h2>KINERJA DRIVER PERIODE ' + String(d1.getDate()).padStart(2,'0') + ' ' + namaBulanArr[d1.getMonth()+1] + ' ' + d1.getFullYear() + ' s/d ' + String(d2.getDate()).padStart(2,'0') + ' ' + namaBulanArr[d2.getMonth()+1] + ' ' + d2.getFullYear() + '</h2>';
+  html += '<table><thead><tr><th rowspan="2">NO</th><th rowspan="2">NAMA</th>';
+  for (let h = 0; h < dateArr.length; h++) {
+    const tgl = dateArr[h];
+    const dow = (tgl.getDay() + 6) % 7;
+    const cls = dow === 0 ? ' class="monday"' : '';
+    html += '<th colspan="2"' + cls + '>' + NAMA_HARI[dow] + ' ' + String(tgl.getDate()).padStart(2,'0') + '-' + blnShort[tgl.getMonth()] + '-' + String(tgl.getFullYear()).slice(-2) + '</th>';
+  }
+  html += '</tr><tr>';
+  for (let h = 0; h < dateArr.length; h++) html += '<th class="out">OUT</th><th class="in">IN</th>';
+  html += '</tr></thead><tbody>';
+  daftarDriver.forEach(function(drv, idx) {
+    html += '<tr><td class="no">' + (idx + 1) + '</td><td class="name">' + drv.nama + '</td>';
+    for (let h = 0; h < dateArr.length; h++) {
+      const tgl = dateArr[h];
+      const tglStr = tgl.getFullYear() + '-' + String(tgl.getMonth() + 1).padStart(2,'0') + '-' + String(tgl.getDate()).padStart(2,'0');
+      const log = dataAll[drv.nama + '|' + tglStr] || { out: '', in: '' };
+      html += '<td>' + (log.out || '--:--') + '</td><td>' + (log.in || '--:--') + '</td>';
+    }
+    html += '</tr>';
+  });
+  html += '</tbody></table></body></html>';
+
+  const iframe = document.createElement('iframe');
+  iframe.style.position = 'fixed'; iframe.style.right = '0'; iframe.style.bottom = '0';
+  iframe.style.width = '0'; iframe.style.height = '0'; iframe.style.border = '0';
+  document.body.appendChild(iframe);
+  iframe.contentDocument.open();
+  iframe.contentDocument.write(html);
+  iframe.contentDocument.close();
+  iframe.onload = function() {
+    iframe.contentWindow.focus();
+    iframe.contentWindow.print();
+    setTimeout(function() { document.body.removeChild(iframe); }, 2000);
+  };
+  tutupModal('modalExport');
+}
+
+function bukaModalRingkasan() {
+  document.getElementById('rngBulan').value = curBulan;
+  document.getElementById('rngTahun').value = curTahun;
+  document.getElementById('rngPakaiRange').checked = false;
+  document.getElementById('rngRangeFields').style.display = 'none';
+  const tgl1 = curTahun + '-' + String(curBulan).padStart(2,'0') + '-01';
+  const lastDay = new Date(curTahun, curBulan, 0).getDate();
+  const tgl2 = curTahun + '-' + String(curBulan).padStart(2,'0') + '-' + String(lastDay).padStart(2,'0');
+  document.getElementById('rngDari').value = tgl1;
+  document.getElementById('rngSampai').value = tgl2;
+  document.getElementById('modalRingkasan').classList.add('show');
+  renderRingkasan();
+}
+
+let lastRingkasan = null;
+
+async function renderRingkasan() {
+  const bulan = Number(document.getElementById('rngBulan').value);
+  const tahun = Number(document.getElementById('rngTahun').value);
+  const pakaiRange = document.getElementById('rngPakaiRange').checked;
+  const dariStr = document.getElementById('rngDari').value;
+  const sampaiStr = document.getElementById('rngSampai').value;
+
+  let startDate, endDate;
+  if (pakaiRange) {
+    if (!dariStr || !sampaiStr) { toast('Isi tanggal dari & sampai'); return; }
+    startDate = new Date(dariStr + 'T00:00:00');
+    endDate = new Date(sampaiStr + 'T00:00:00');
+    if (startDate > endDate) { toast('Tanggal dari > sampai'); return; }
+  } else {
+    startDate = new Date(tahun, bulan - 1, 1);
+    endDate = new Date(tahun, bulan, 0);
+  }
+
+  toast('Menghitung ringkasan...');
+  const bulanSet = [];
+  let cur = new Date(startDate);
+  while (cur <= endDate) {
+    const key = cur.getFullYear() + '-' + (cur.getMonth() + 1);
+    if (bulanSet.indexOf(key) === -1) bulanSet.push(key);
+    cur.setDate(cur.getDate() + 1);
+  }
+  const dataAll = {};
+  try {
+    for (let i = 0; i < bulanSet.length; i++) {
+      const parts = bulanSet[i].split('-');
+      const r = await api({ action: 'data', bulan: Number(parts[1]), tahun: Number(parts[0]) });
+      if (r.ok && r.data) for (const k in r.data) if (r.data.hasOwnProperty(k)) dataAll[k] = r.data[k];
+    }
+  } catch(e) { toast('Gagal ambil data'); return; }
+
+  let driversAll = drivers;
+  try {
+    const rd = await api({ action: 'drivers' });
+    if (rd.ok) driversAll = rd.drivers || [];
+  } catch(e) {}
+
+  const daftarDriver = driversAll.filter(function(d) {
+    if (d.tglAktif) { const ta = new Date(d.tglAktif); if (ta > endDate) return false; }
+    if (d.tglResign) { const tr = new Date(d.tglResign); if (tr < startDate) return false; }
+    return true;
+  });
+
+  const dateArr = [];
+  let cur2 = new Date(startDate);
+  while (cur2 <= endDate) { dateArr.push(new Date(cur2)); cur2.setDate(cur2.getDate() + 1); }
+  const blnShort = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+
+  let grandTotalMenit = 0;
+  const hasil = [];
+
+  let html = '<table style="border-collapse:collapse;width:100%;font-size:10px;"><thead><tr>';
+  html += '<th style="background:#9333ea;color:white;padding:3px;border:1px solid #555;">NO</th>';
+  html += '<th style="background:#9333ea;color:white;padding:3px;border:1px solid #555;text-align:left;">NAMA</th>';
+  for (let h = 0; h < dateArr.length; h++) {
+    const tgl = dateArr[h];
+    const cls = tgl.getDay() === 1 ? 'background:#dc3545;color:white;' : 'background:#c4b5fd;';
+    html += '<th style="' + cls + 'padding:2px;border:1px solid #555;font-size:9px;">' + tgl.getDate() + '</th>';
+  }
+  html += '<th style="background:#28A745;color:white;padding:3px;border:1px solid #555;">TOTAL</th>';
+  html += '</tr></thead><tbody>';
+
+  daftarDriver.forEach(function(drv, idx) {
+    const rowData = { nama: drv.nama, hari: [], total: 0 };
+    let totalMenit = 0;
+    html += '<tr>';
+    html += '<td style="text-align:center;padding:2px;border:1px solid #ccc;background:#f3f4f6;">' + (idx + 1) + '</td>';
+    html += '<td style="padding:2px 6px;border:1px solid #ccc;font-weight:bold;background:#f3f4f6;">' + drv.nama + '</td>';
+    for (let h = 0; h < dateArr.length; h++) {
+      const tgl = dateArr[h];
+      const tglStr = tgl.getFullYear() + '-' + String(tgl.getMonth() + 1).padStart(2,'0') + '-' + String(tgl.getDate()).padStart(2,'0');
+      const log = dataAll[drv.nama + '|' + tglStr] || null;
+      const menit = log ? hitungMenit(log.out, log.in) : null;
+      if (menit !== null) totalMenit += menit;
+      rowData.hari.push(menit);
+      const txt = menit !== null ? formatJamKerja(menit) : (log && (log.out || log.in) ? '?' : '');
+      const warna = menit !== null ? '' : (log && (log.out || log.in) ? 'background:#fee2e2;' : 'background:#f9fafb;');
+      html += '<td style="text-align:center;padding:2px;border:1px solid #eee;font-size:10px;' + warna + '">' + txt + '</td>';
+    }
+    rowData.total = totalMenit;
+    grandTotalMenit += totalMenit;
+    html += '<td style="text-align:center;padding:2px;border:1px solid #ccc;font-weight:bold;background:#d1fae5;">' + formatJamKerja(totalMenit) + '</td>';
+    html += '</tr>';
+    hasil.push(rowData);
+  });
+
+  html += '</tbody><tfoot><tr>';
+  html += '<td colspan="' + (2 + dateArr.length) + '" style="text-align:right;padding:4px;border:1px solid #555;background:#9333ea;color:white;font-weight:bold;">GRAND TOTAL</td>';
+  html += '<td style="text-align:center;padding:4px;border:1px solid #555;background:#9333ea;color:white;font-weight:bold;">' + formatJamKerja(grandTotalMenit) + '</td>';
+  html += '</tr></tfoot></table>';
+
+  document.getElementById('rngHasil').innerHTML = html;
+
+  lastRingkasan = {
+    periode: pakaiRange ? (dariStr + ' s/d ' + sampaiStr) : ('Bulan ' + bulan + '/' + tahun),
+    drivers: hasil,
+    dates: dateArr,
+    grand: grandTotalMenit
+  };
+  toast('Ringkasan siap');
+}
+
+function exportRingkasanXLSX() {
+  if (!lastRingkasan) { toast('Tampilkan dulu'); return; }
+  if (typeof XLSX === 'undefined') { toast('Library XLSX belum siap'); return; }
+  const blnShort = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+  const aoa = [];
+  const head = ['NO', 'NAMA'];
+  lastRingkasan.dates.forEach(function(tgl) {
+    head.push(String(tgl.getDate()).padStart(2,'0') + '-' + blnShort[tgl.getMonth()]);
+  });
+  head.push('TOTAL');
+  aoa.push(['RINGKASAN KINERJA DRIVER']);
+  aoa.push(['Periode: ' + lastRingkasan.periode]);
+  aoa.push([]);
+  aoa.push(head);
+  lastRingkasan.drivers.forEach(function(d, idx) {
+    const row = [idx + 1, d.nama];
+    d.hari.forEach(function(m) { row.push(m !== null ? formatJamKerja(m) : ''); });
+    row.push(formatJamKerja(d.total));
+    aoa.push(row);
+  });
+  const foot = ['', 'GRAND TOTAL'];
+  for (let i = 0; i < lastRingkasan.dates.length; i++) foot.push('');
+  foot.push(formatJamKerja(lastRingkasan.grand));
+  aoa.push(foot);
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!merges'] = [{s: {r: 0, c: 0}, e: {r: 0, c: head.length - 1}}];
+  const wscols = [{wch: 5}, {wch: 15}];
+  for (let i = 0; i < lastRingkasan.dates.length; i++) wscols.push({wch: 8});
+  wscols.push({wch: 10});
+  ws['!cols'] = wscols;
+  XLSX.utils.book_append_sheet(wb, ws, 'Ringkasan');
+  XLSX.writeFile(wb, 'RingkasanDriver_' + lastRingkasan.periode.replace(/[^0-9A-Za-z]/g, '_') + '.xlsx');
+  toast('File ringkasan di-download');
+}
 async function uploadMatrix() {
   if (!navigator.onLine) return toast('Butuh internet');
   if (!confirm('Tarik data dari sheet Matrix (Google Sheets) ke HTML?' + '\n\n' + 'Sheet Data akan di-update sesuai isi Matrix.')) return;
@@ -719,6 +1037,49 @@ refreshData(true);
         </div>
       </div>
       <button onclick="exportXLSXRange()" style="width:100%;padding:12px;background:#fd7e14;color:white;border:none;border-radius:5px;font-size:15px;font-weight:bold;margin-top:12px;cursor:pointer;">&#128190; Download Excel</button>
+      <button onclick="printRangeDariModal()" style="width:100%;padding:12px;background:#6c757d;color:white;border:none;border-radius:5px;font-size:15px;font-weight:bold;margin-top:8px;cursor:pointer;">&#128424; Print Range Ini</button>
+    </div>
+  </div>
+</div>
+<div class="modal-bg" id="modalRingkasan">
+  <div class="modal" style="max-width:98%;">
+    <div class="modal-header" style="background:#9333ea;">
+      <span>&#9201; Ringkasan Kinerja Driver</span>
+      <button class="modal-close" onclick="tutupModal('modalRingkasan')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div>
+          <label style="font-size:11px;font-weight:bold;">Bulan</label>
+          <select id="rngBulan" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:5px;font-size:13px;">
+            <option value="1">JANUARI</option><option value="2">FEBRUARI</option>
+            <option value="3">MARET</option><option value="4">APRIL</option>
+            <option value="5">MEI</option><option value="6">JUNI</option>
+            <option value="7">JULI</option><option value="8">AGUSTUS</option>
+            <option value="9">SEPTEMBER</option><option value="10">OKTOBER</option>
+            <option value="11">NOVEMBER</option><option value="12">DESEMBER</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:bold;">Tahun</label>
+          <input type="number" id="rngTahun" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:5px;font-size:13px;box-sizing:border-box;">
+        </div>
+      </div>
+      <div style="margin-bottom:10px;padding:6px;background:#f8f9fa;border-radius:5px;">
+        <label style="font-size:12px;cursor:pointer;"><input type="checkbox" id="rngPakaiRange" onchange="document.getElementById('rngRangeFields').style.display=this.checked?'block':'none'"> Pakai range tanggal</label>
+      </div>
+      <div id="rngRangeFields" style="display:none;margin-bottom:10px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div><label style="font-size:11px;font-weight:bold;">Dari</label><input type="date" id="rngDari" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:5px;box-sizing:border-box;"></div>
+          <div><label style="font-size:11px;font-weight:bold;">Sampai</label><input type="date" id="rngSampai" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:5px;box-sizing:border-box;"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:12px;">
+        <button onclick="renderRingkasan()" style="flex:1;padding:10px;background:#9333ea;color:white;border:none;border-radius:5px;font-weight:bold;cursor:pointer;">&#128269; Tampilkan</button>
+        <button onclick="exportRingkasanXLSX()" style="flex:1;padding:10px;background:#28A745;color:white;border:none;border-radius:5px;font-weight:bold;cursor:pointer;">&#128190; Export XLSX</button>
+      </div>
+      <div id="rngHasil" style="overflow:auto;max-height:50vh;border:1px solid #ccc;border-radius:5px;"></div>
+      <div class="hint" style="margin-top:10px;">&#9432; Angka menunjukkan durasi kerja (IN - OUT). Format <b>8:15</b> = 8 jam 15 menit. Baris merah = belum lengkap. Kolom TOTAL = akumulasi jam kerja.</div>
     </div>
   </div>
 </div>
