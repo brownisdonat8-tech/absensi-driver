@@ -133,7 +133,7 @@ tbody td.driver-name {
     <button onclick="geserBulan(1)">&#8594;</button>
     <button class="btn-green" onclick="bukaModal('modalDriver')">&#9881; Driver</button>
     <button class="btn-cyan" onclick="refreshData()">&#8635; Sync</button>
-    <button class="btn-orange" onclick="exportXLSX()">&#128190; Export Excel</button>
+    <button class="btn-orange" onclick="bukaModalExport()">&#128190; Export Excel</button>
     <button class="btn-purple" onclick="buatMatrix()">&#128202; Matrix</button>
     <button class="btn-cyan" onclick="uploadMatrix()" style="background:#0d9488;">&#128229; Upload Matrix</button>
   </div>
@@ -520,5 +520,50 @@ renderTabel();
 updateBadge();
 refreshData(true);
 </script>
+<div class="modal-bg" id="modalExport">
+  <div class="modal">
+    <div class="modal-header" style="background:#fd7e14;">
+      <span>&#128190; Export Excel</span>
+      <button class="modal-close" onclick="tutupModal('modalExport')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:10px;">
+        <label style="font-size:11px;font-weight:bold;">Bulan</label>
+        <select id="expBulan" style="width:100%;padding:9px;border:1px solid #ccc;border-radius:5px;font-size:14px;">
+          <option value="1">JANUARI</option>
+          <option value="2">FEBRUARI</option>
+          <option value="3">MARET</option>
+          <option value="4">APRIL</option>
+          <option value="5">MEI</option>
+          <option value="6">JUNI</option>
+          <option value="7">JULI</option>
+          <option value="8">AGUSTUS</option>
+          <option value="9">SEPTEMBER</option>
+          <option value="10">OKTOBER</option>
+          <option value="11">NOVEMBER</option>
+          <option value="12">DESEMBER</option>
+        </select>
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:11px;font-weight:bold;">Tahun</label>
+        <input type="number" id="expTahun" style="width:100%;padding:9px;border:1px solid #ccc;border-radius:5px;font-size:14px;">
+      </div>
+      <div style="margin-bottom:10px;padding:8px;background:#f8f9fa;border-radius:5px;">
+        <label style="font-size:12px;cursor:pointer;"><input type="checkbox" id="expPakaiRange" onchange="toggleRange()"> Pakai rentang tanggal</label>
+      </div>
+      <div id="rangeFields" style="display:none;">
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px;font-weight:bold;">Dari tanggal</label>
+          <input type="date" id="expDari" style="width:100%;padding:9px;border:1px solid #ccc;border-radius:5px;font-size:14px;">
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px;font-weight:bold;">Sampai tanggal</label>
+          <input type="date" id="expSampai" style="width:100%;padding:9px;border:1px solid #ccc;border-radius:5px;font-size:14px;">
+        </div>
+      </div>
+      <button onclick="exportXLSXRange()" style="width:100%;padding:12px;background:#fd7e14;color:white;border:none;border-radius:5px;font-size:15px;font-weight:bold;margin-top:12px;cursor:pointer;">&#128190; Download Excel</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
