@@ -386,6 +386,7 @@ function bukaPicker(inp) {
   document.getElementById("pickerTitle").textContent = "Pilih Jam - " + tipe;
   document.getElementById("pickerInfo").innerHTML = "<b>Driver:</b> " + nama + "<br><b>Tanggal:</b> " + tglStr;
   updatePickerPreview();
+  inisialisasiPicker();
   document.getElementById("pickerJam").classList.add("show");
 }
 
@@ -510,7 +511,7 @@ function geserBulan(delta) {
   curBulan += delta;
   if (curBulan > 12) { curBulan = 1; curTahun++; }
   if (curBulan < 1) { curBulan = 12; curTahun--; }
-inisialisasiPicker();
+
   loadCache();
   renderTabel();
   refreshData(true);
