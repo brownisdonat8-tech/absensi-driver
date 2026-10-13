@@ -142,6 +142,34 @@ tbody td.driver-name {
 .print-val { display: none; }
 .print-header { display: none; }
 </style>
+<style id="picker-style">
+.picker-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 9999; align-items: center; justify-content: center; padding: 12px; }
+.picker-overlay.show { display: flex; }
+.picker { background: white; border-radius: 10px; max-width: 520px; width: 100%; max-height: 95vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
+.picker-header { background: #4472C4; color: white; padding: 14px 18px; border-radius: 10px 10px 0 0; display: flex; justify-content: space-between; align-items: center; }
+.picker-header span { font-size: 15px; font-weight: bold; }
+.picker-header .pc-close { background: none; border: none; color: white; font-size: 26px; cursor: pointer; padding: 0 6px; line-height: 1; }
+.picker-body { padding: 16px; }
+.picker-info { background: #EFF6FF; padding: 10px 12px; border-radius: 6px; margin-bottom: 14px; font-size: 13px; color: #1e40af; }
+.picker-info b { color: #4472C4; }
+.picker-section { margin-bottom: 14px; }
+.picker-label { font-weight: bold; font-size: 13px; margin-bottom: 6px; color: #333; text-transform: uppercase; letter-spacing: 1px; }
+.picker-grid { display: grid; gap: 6px; grid-template-columns: repeat(6, 1fr); }
+.picker-cell { padding: 12px 4px; text-align: center; background: #f0f0f0; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; border: 2px solid transparent; font-family: "Courier New", monospace; user-select: none; -webkit-tap-highlight-color: transparent; }
+.picker-cell:hover { background: #e0e0e0; }
+.picker-cell.selected { background: #4472C4; color: white; border-color: #2E5597; box-shadow: 0 0 0 3px rgba(68,114,196,0.3); }
+.picker-preview { text-align: center; font-size: 40px; font-weight: bold; color: #C00000; padding: 14px; background: #FFF9C4; border-radius: 8px; margin: 14px 0; font-family: "Courier New", monospace; letter-spacing: 3px; border: 2px dashed #FFC000; }
+.picker-actions { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 8px; }
+.picker-actions button { padding: 13px 8px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; color: white; font-family: Arial; }
+.pc-clear { background: #dc3545; }
+.pc-cancel { background: #6c757d; }
+.pc-save { background: #28A745; }
+.pc-clear:active, .pc-cancel:active, .pc-save:active { opacity: 0.8; }
+@media (max-width: 480px) {
+  .picker-cell { padding: 10px 2px; font-size: 14px; }
+  .picker-preview { font-size: 34px; padding: 10px; }
+}
+</style>
 </head>
 <body>
 
@@ -302,6 +330,101 @@ function validasiJam(val) {
   const mn = Number(m[2]);
   return j >= 0 && j <= 23 && mn >= 0 && mn <= 59;
 }
+// ============ PICKER JAM (24 JAM) ============
+let pickerTarget = null;
+let pickerHour = null;
+let pickerMin = null;
+
+function inisialisasiPicker() {
+  const hourGrid = document.getElementById("pickerHourGrid");
+  if (!hourGrid) return;
+  hourGrid.innerHTML = "";
+  for (let h = 0; h < 24; h++) {
+    const cell = document.createElement("div");
+    cell.className = "picker-cell";
+    cell.textContent = String(h).padStart(2, "0");
+    cell.dataset.value = h;
+    cell.onclick = function() { pickerHour = h; updatePickerPreview(); };
+    hourGrid.appendChild(cell);
+  }
+  const minGrid = document.getElementById("pickerMinGrid");
+  minGrid.innerHTML = "";
+  for (let m = 0; m < 60; m += 5) {
+    const cell = document.createElement("div");
+    cell.className = "picker-cell";
+    cell.textContent = String(m).padStart(2, "0");
+    cell.dataset.value = m;
+    cell.onclick = function() { pickerMin = m; updatePickerPreview(); };
+    minGrid.appendChild(cell);
+  }
+}
+
+function bukaPicker(inp) {
+  pickerTarget = inp;
+  const val = inp.value;
+  if (val && /^\d{1,2}:\d{2}$/.test(val)) {
+    const parts = val.split(":");
+    pickerHour = parseInt(parts[0], 10);
+    let m = parseInt(parts[1], 10);
+    m = Math.round(m / 5) * 5;
+    if (m >= 60) m = 55;
+    pickerMin = m;
+  } else {
+    pickerHour = null;
+    pickerMin = null;
+  }
+  const nama = inp.dataset.nama || "";
+  const tgl = inp.dataset.tgl || "";
+  const tipe = inp.dataset.tipe === "out" ? "BERANGKAT (OUT)" : "PULANG (IN)";
+  let tglStr = tgl;
+  try {
+    const tglObj = new Date(tgl + "T00:00:00");
+    const hari = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"][tglObj.getDay()];
+    const bulanArr = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+    tglStr = hari + ", " + tglObj.getDate() + " " + bulanArr[tglObj.getMonth()] + " " + tglObj.getFullYear();
+  } catch(e) {}
+  document.getElementById("pickerTitle").textContent = "Pilih Jam - " + tipe;
+  document.getElementById("pickerInfo").innerHTML = "<b>Driver:</b> " + nama + "<br><b>Tanggal:</b> " + tglStr;
+  updatePickerPreview();
+  document.getElementById("pickerJam").classList.add("show");
+}
+
+function updatePickerPreview() {
+  document.querySelectorAll("#pickerHourGrid .picker-cell").forEach(function(c) {
+    c.classList.toggle("selected", Number(c.dataset.value) === pickerHour);
+  });
+  document.querySelectorAll("#pickerMinGrid .picker-cell").forEach(function(c) {
+    c.classList.toggle("selected", Number(c.dataset.value) === pickerMin);
+  });
+  const h = pickerHour !== null ? String(pickerHour).padStart(2, "0") : "--";
+  const m = pickerMin !== null ? String(pickerMin).padStart(2, "0") : "--";
+  document.getElementById("pickerPreview").textContent = h + ":" + m;
+}
+
+function pickerClear() {
+  if (!pickerTarget) return;
+  pickerTarget.value = "";
+  saveCell(pickerTarget);
+  tutupPicker();
+  toast("Jam dikosongkan");
+}
+
+function pickerSave() {
+  if (!pickerTarget) return;
+  if (pickerHour === null || pickerMin === null) {
+    toast("Pilih jam & menit dulu");
+    return;
+  }
+  pickerTarget.value = String(pickerHour).padStart(2, "0") + ":" + String(pickerMin).padStart(2, "0");
+  saveCell(pickerTarget);
+  tutupPicker();
+}
+
+function tutupPicker() {
+  document.getElementById("pickerJam").classList.remove("show");
+  pickerTarget = null;
+}
+
 async function saveCell(inp) {
   const key = inp.dataset.nama + '|' + inp.dataset.tgl;
   if (!logs[key]) logs[key] = { out: '', in: '' };
@@ -379,20 +502,7 @@ function renderTabel() {
   document.getElementById('tableWrap').innerHTML = html;
 
     document.querySelectorAll('td.cell input').forEach(function(inp) {
-    inp.addEventListener('input', function() { autoFormatJam(inp); });
-    inp.addEventListener('blur', function() {
-      const val = inp.value.trim();
-      if (val === '') { saveCell(inp); return; }
-      if (validasiJam(val)) {
-        saveCell(inp);
-      } else {
-        toast('Format jam salah. Gunakan HH:MM (contoh: 07:30 atau 19:00)');
-        inp.focus();
-      }
-    });
-    inp.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') { inp.blur(); }
-    });
+    inp.addEventListener('click', function(e) { e.preventDefault(); bukaPicker(inp); });
   });
 }
 
@@ -1308,6 +1418,31 @@ refreshData(true);
       <button onclick="matikanAutoBackup()" style="width:100%;padding:11px;background:#dc3545;color:white;border:none;border-radius:5px;font-size:14px;font-weight:bold;cursor:pointer;">&#10060; Matikan Auto-Backup</button>
       <div class="hint" style="margin-top:10px;">
         &#9432; File akan dibuat dengan nama <code>laporan_YYYYMMDD_HHMM.xlsx</code> berisi data bulan berjalan, tersimpan di folder Drive yang ditentukan. Auto-backup berjalan di server Google, <b>tablet/PC tidak perlu menyala</b>.
+      </div>
+    </div>
+  </div>
+</div>
+<div class="picker-overlay" id="pickerJam">
+  <div class="picker">
+    <div class="picker-header">
+      <span id="pickerTitle">Pilih Jam</span>
+      <button class="pc-close" onclick="tutupPicker()">&times;</button>
+    </div>
+    <div class="picker-body">
+      <div class="picker-info" id="pickerInfo"></div>
+      <div class="picker-section">
+        <div class="picker-label">Jam</div>
+        <div class="picker-grid" id="pickerHourGrid"></div>
+      </div>
+      <div class="picker-section">
+        <div class="picker-label">Menit</div>
+        <div class="picker-grid" id="pickerMinGrid"></div>
+      </div>
+      <div class="picker-preview" id="pickerPreview">--:--</div>
+      <div class="picker-actions">
+        <button class="pc-clear" onclick="pickerClear()">Kosongkan</button>
+        <button class="pc-cancel" onclick="tutupPicker()">Batal</button>
+        <button class="pc-save" onclick="pickerSave()">Simpan</button>
       </div>
     </div>
   </div>
