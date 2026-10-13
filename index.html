@@ -264,6 +264,44 @@ function loadCache() {
   try { logs = JSON.parse(localStorage.getItem('cache_logs_' + curBulan + '_' + curTahun) || '{}'); } catch (e) {}
 }
 
+function autoFormatJam(inp) {
+  let v = inp.value.replace(/[^0-9:]/g, '');
+  // Hapus titik dua lama, ambil digit
+  let digits = v.replace(/:/g, '');
+  if (digits.length === 0) { inp.value = ''; return; }
+  if (digits.length <= 2) {
+    // Hanya jam, biarkan
+    if (digits.length === 2 && Number(digits) > 23) {
+      // Koreksi kalau > 23
+      inp.value = digits.substring(0, 1);
+    } else {
+      inp.value = digits;
+    }
+    return;
+  }
+  if (digits.length === 3) {
+    // 730 → 07:30
+    digits = '0' + digits;
+  }
+  if (digits.length >= 4) {
+    let j = digits.substring(0, 2);
+    let m = digits.substring(2, 4);
+    // Koreksi jam > 23
+    if (Number(j) > 23) { j = '23'; }
+    // Koreksi menit > 59
+    if (Number(m) > 59) { m = '59'; }
+    inp.value = j + ':' + m;
+  }
+}
+
+function validasiJam(val) {
+  if (!val) return true;
+  const m = val.match(/^([0-9]{1,2}):([0-9]{2})$/);
+  if (!m) return false;
+  const j = Number(m[1]);
+  const mn = Number(m[2]);
+  return j >= 0 && j <= 23 && mn >= 0 && mn <= 59;
+}
 async function saveCell(inp) {
   const key = inp.dataset.nama + '|' + inp.dataset.tgl;
   if (!logs[key]) logs[key] = { out: '', in: '' };
@@ -340,8 +378,21 @@ function renderTabel() {
   html += '</tbody></table>';
   document.getElementById('tableWrap').innerHTML = html;
 
-  document.querySelectorAll('td.cell input').forEach(function(inp) {
-    inp.addEventListener('change', function() { saveCell(inp); });
+    document.querySelectorAll('td.cell input').forEach(function(inp) {
+    inp.addEventListener('input', function() { autoFormatJam(inp); });
+    inp.addEventListener('blur', function() {
+      const val = inp.value.trim();
+      if (val === '') { saveCell(inp); return; }
+      if (validasiJam(val)) {
+        saveCell(inp);
+      } else {
+        toast('Format jam salah. Gunakan HH:MM (contoh: 07:30 atau 19:00)');
+        inp.focus();
+      }
+    });
+    inp.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { inp.blur(); }
+    });
   });
 }
 
@@ -1053,6 +1104,7 @@ async function bukaModalAutoBackup() {
     const r = await api({ action: 'status_autobackup' });
     if (r.ok) {
       document.getElementById('abEnabled').checked = r.enabled;
+      document.getElementById('abMatrix').checked = r.matrixEnabled || false;
       if (r.jam) document.getElementById('abJam').value = r.jam;
       if (r.menit) document.getElementById('abMenit').value = r.menit;
       if (r.folder) document.getElementById('abFolder').value = r.folder;
@@ -1062,6 +1114,10 @@ async function bukaModalAutoBackup() {
         statusHtml += '<br><b>Backup terakhir:</b> ' + tgl.toLocaleString('id-ID');
         statusHtml += '<br><b>Hasil:</b> ' + (r.lastStatus || '-');
         if (r.lastFile) statusHtml += '<br><b>File:</b> ' + r.lastFile;
+      if (r.lastMatrixTime) {
+        const tglM = new Date(r.lastMatrixTime);
+        statusHtml += '<br><b>Matrix terakhir:</b> ' + tglM.toLocaleString('id-ID') + ' (' + (r.lastMatrixStatus || '-') + ')';
+      }
         if (r.lastUrl) statusHtml += '<br><a href="' + r.lastUrl + '" target="_blank" style="color:#059669;">Buka di Drive &#8599;</a>';
       } else {
         statusHtml += '<br><i>Belum pernah backup</i>';
@@ -1080,12 +1136,13 @@ async function simpanAutoBackup() {
   const jam = Number(document.getElementById('abJam').value);
   const menit = Number(document.getElementById('abMenit').value);
   const folder = document.getElementById('abFolder').value.trim() || 'Backup_AbsensiDriver';
+  const matrixEnabled = document.getElementById('abMatrix').checked;
   if (!enabled) { toast('Centang "Aktifkan auto-backup" dulu'); return; }
   if (isNaN(jam) || jam < 0 || jam > 23) { toast('Jam harus 0-23'); return; }
   if (isNaN(menit) || menit < 0 || menit > 59) { toast('Menit harus 0-59'); return; }
   toast('Menyimpan setting...');
   try {
-    const r = await api({ action: 'setup_autobackup', jam: jam, menit: menit, folder: folder });
+    const r = await api({ action: 'setup_autobackup', jam: jam, menit: menit, folder: folder, matrixEnabled: matrixEnabled });
     if (r.ok) {
       toast('✅ ' + r.msg);
       setTimeout(bukaModalAutoBackup, 800);
