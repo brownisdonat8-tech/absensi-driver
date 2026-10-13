@@ -510,6 +510,7 @@ function geserBulan(delta) {
   curBulan += delta;
   if (curBulan > 12) { curBulan = 1; curTahun++; }
   if (curBulan < 1) { curBulan = 12; curTahun--; }
+inisialisasiPicker();
   loadCache();
   renderTabel();
   refreshData(true);
