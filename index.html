@@ -155,8 +155,6 @@ tbody td.driver-name {
 .picker-section { margin-bottom: 14px; }
 .picker-label { font-weight: bold; font-size: 13px; margin-bottom: 6px; color: #333; text-transform: uppercase; letter-spacing: 1px; }
 .picker-grid { display: grid; gap: 6px; grid-template-columns: repeat(6, 1fr); }
-.picker-grid-min { grid-template-columns: repeat(10, 1fr); gap: 4px; }
-.picker-grid-min .picker-cell { padding: 8px 2px; font-size: 12px; }
 .picker-cell { padding: 12px 4px; text-align: center; background: #f0f0f0; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; border: 2px solid transparent; font-family: "Courier New", monospace; user-select: none; -webkit-tap-highlight-color: transparent; }
 .picker-cell:hover { background: #e0e0e0; }
 .picker-cell.selected { background: #4472C4; color: white; border-color: #2E5597; box-shadow: 0 0 0 3px rgba(68,114,196,0.3); }
@@ -351,8 +349,7 @@ function inisialisasiPicker() {
   }
   const minGrid = document.getElementById("pickerMinGrid");
   minGrid.innerHTML = "";
-  minGrid.className = "picker-grid picker-grid-min";
-  for (let m = 0; m < 60; m++) {
+  for (let m = 0; m < 60; m += 5) {
     const cell = document.createElement("div");
     cell.className = "picker-cell";
     cell.textContent = String(m).padStart(2, "0");
@@ -389,7 +386,6 @@ function bukaPicker(inp) {
   document.getElementById("pickerTitle").textContent = "Pilih Jam - " + tipe;
   document.getElementById("pickerInfo").innerHTML = "<b>Driver:</b> " + nama + "<br><b>Tanggal:</b> " + tglStr;
   updatePickerPreview();
-  inisialisasiPicker();
   document.getElementById("pickerJam").classList.add("show");
 }
 
@@ -472,6 +468,16 @@ function driversUntukBulan(bulan, tahun) {
   });
 }
 
+function getShifts(key) {
+  const raw = logs[key];
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === 'object' && (raw.out || raw.in)) {
+    return [{ shift: 1, out: raw.out || '', in: raw.in || '' }];
+  }
+  return [];
+}
+
 function renderTabel() {
   const jmlHari = new Date(curTahun, curBulan, 0).getDate();
   const daftarDriver = driversUntukBulan(curBulan, curTahun);
@@ -496,7 +502,7 @@ function renderTabel() {
       for (let d = 1; d <= jmlHari; d++) {
         const tgl = curTahun + '-' + String(curBulan).padStart(2,'0') + '-' + String(d).padStart(2,'0');
         const key = drv.nama + '|' + tgl;
-        const shifts = logs[key] || [];
+        const shifts = getShifts(key);
         
         let outStr = shifts.map(function(s) { return s.out; }).filter(Boolean).join('<br>');
         let inStr = shifts.map(function(s) { return s.in; }).filter(Boolean).join('<br>');
@@ -520,154 +526,7 @@ function geserBulan(delta) {
   curBulan += delta;
   if (curBulan > 12) { curBulan = 1; curTahun++; }
   if (curBulan < 1) { curBulan = 12; curTahun--; }
-
-  // ============ MODAL MULTI-SHIFT ============
-let currentShiftTarget = null;
-let currentShiftData = [];
-
-function bukaModalShift(nama, tgl) {
-  currentShiftTarget = { nama: nama, tgl: tgl };
-  const key = nama + '|' + tgl;
-  currentShiftData = logs[key] ? JSON.parse(JSON.stringify(logs[key])) : [];
-  
-  if (currentShiftData.length === 0) {
-    currentShiftData.push({ out: '', in: '' }); // Default 1 baris kosong
-  }
-  
-  document.getElementById('shiftTitle').textContent = 'Shift - ' + nama;
-  document.getElementById('shiftInfo').innerHTML = '<b>Tanggal:</b> ' + tgl;
-  
-  renderListShift();
-  document.getElementById('modalShift').classList.add('show');
-}
-
-function tutupModalShift() {
-  document.getElementById('modalShift').classList.remove('show');
-  currentShiftTarget = null;
-  currentShiftData = [];
-}
-
-function renderListShift() {
-  const container = document.getElementById('shiftList');
-  container.innerHTML = '';
-  
-  currentShiftData.forEach(function(s, idx) {
-    const row = document.createElement('div');
-    row.style.cssText = 'display:grid; grid-template-columns: 1fr 1fr 40px; gap:8px; margin-bottom:8px; align-items:center;';
-    
-    const inpOut = document.createElement('input');
-    inpOut.type = 'text';
-    inpOut.readOnly = true;
-    inpOut.className = 'cell-input';
-    inpOut.style.cssText = 'width:100%; padding:10px; text-align:center; border:1px solid #ccc; border-radius:5px; font-weight:bold; color:#C00000;';
-    inpOut.value = s.out || '--:--';
-    inpOut.onclick = function() { bukaPickerShift(idx, 'out'); };
-    
-    const inpIn = document.createElement('input');
-    inpIn.type = 'text';
-    inpIn.readOnly = true;
-    inpIn.className = 'cell-input';
-    inpIn.style.cssText = 'width:100%; padding:10px; text-align:center; border:1px solid #ccc; border-radius:5px; font-weight:bold; color:#C00000;';
-    inpIn.value = s.in || '--:--';
-    inpIn.onclick = function() { bukaPickerShift(idx, 'in'); };
-    
-    const btnDel = document.createElement('button');
-    btnDel.innerHTML = '&times;';
-    btnDel.style.cssText = 'background:#dc3545; color:white; border:none; border-radius:5px; height:100%; cursor:pointer; font-size:20px;';
-    btnDel.onclick = function() { hapusBarisShift(idx); };
-    
-    row.appendChild(inpOut);
-    row.appendChild(inpIn);
-    row.appendChild(btnDel);
-    container.appendChild(row);
-  });
-}
-
-function tambahBarisShift() {
-  currentShiftData.push({ out: '', in: '' });
-  renderListShift();
-}
-
-function hapusBarisShift(idx) {
-  currentShiftData.splice(idx, 1);
-  if (currentShiftData.length === 0) currentShiftData.push({ out: '', in: '' });
-  renderListShift();
-}
-
-// Picker khusus untuk modal shift
-let pickerShiftTargetIdx = -1;
-let pickerShiftTargetType = '';
-
-function bukaPickerShift(idx, type) {
-  pickerShiftTargetIdx = idx;
-  pickerShiftTargetType = type;
-  
-  const val = currentShiftData[idx][type];
-  if (val && /^\d{1,2}:\d{2}$/.test(val)) {
-    const parts = val.split(':');
-    pickerHour = parseInt(parts[0], 10);
-    pickerMin = parseInt(parts[1], 10);
-  } else {
-    pickerHour = null; pickerMin = null;
-  }
-  
-  document.getElementById('pickerTitle').textContent = 'Pilih Jam ' + (type === 'out' ? 'OUT' : 'IN');
-  document.getElementById('pickerInfo').innerHTML = '<b>Driver:</b> ' + currentShiftTarget.nama;
-  
-  updatePickerPreview();
-  document.getElementById('pickerJam').classList.add('show');
-}
-
-// Override fungsi pickerSave agar menyimpan ke modal shift
-const originalPickerSave = pickerSave;
-pickerSave = function() {
-  if (!pickerTarget) { // Berarti ini dari modal Shift
-    if (pickerHour === null || pickerMin === null) { toast('Pilih jam dulu'); return; }
-    const timeStr = String(pickerHour).padStart(2,'0') + ':' + String(pickerMin).padStart(2,'0');
-    currentShiftData[pickerShiftTargetIdx][pickerShiftTargetType] = timeStr;
-    renderListShift();
-    document.getElementById('pickerJam').classList.remove('show');
-  } else {
-    originalPickerSave(); // Panggil fungsi asli jika dari tabel utama
-  }
-};
-
-// Override pickerClear
-const originalPickerClear = pickerClear;
-pickerClear = function() {
-  if (!pickerTarget) {
-    currentShiftData[pickerShiftTargetIdx][pickerShiftTargetType] = '';
-    renderListShift();
-    document.getElementById('pickerJam').classList.remove('show');
-  } else {
-    originalPickerClear();
-  }
-};
-
-async function simpanSemuaShift() {
-  if (!currentShiftTarget) return;
-  
-  toast('Menyimpan...');
-  try {
-    const r = await api({
-      action: 'simpan_shifts',
-      nama: currentShiftTarget.nama,
-      tanggal: currentShiftTarget.tgl,
-      shifts: currentShiftData
-    });
-    
-    if (r.ok) {
-      toast('✅ Shift tersimpan');
-      tutupModalShift();
-      refreshData(true); // Refresh tabel
-    } else {
-      toast('Gagal: ' + r.error);
-    }
-  } catch(e) {
-    toast('Error: ' + e.message);
-  }
-}
-
+inisialisasiPicker();
 // ============ MODAL MULTI-SHIFT ============
 let currentShiftTarget = null;
 let currentShiftData = [];
@@ -677,7 +536,7 @@ let pickerShiftTargetType = '';
 function bukaModalShift(nama, tgl) {
   currentShiftTarget = { nama: nama, tgl: tgl };
   const key = nama + '|' + tgl;
-  currentShiftData = logs[key] ? JSON.parse(JSON.stringify(logs[key])) : [];
+  currentShiftData = JSON.parse(JSON.stringify(getShifts(key)));
   if (currentShiftData.length === 0) currentShiftData.push({ out: '', in: '' });
   
   document.getElementById('shiftTitle').textContent = 'Shift - ' + nama;
@@ -728,7 +587,7 @@ function hapusBarisShift(idx) {
 }
 
 function bukaPickerShift(idx, type) {
-  pickerTarget = null; // PENTING: Tandai ini dari modal shift
+  pickerTarget = null; 
   pickerShiftTargetIdx = idx; pickerShiftTargetType = type;
   const val = currentShiftData[idx][type];
   if (val && /^\d{1,2}:\d{2}$/.test(val)) {
@@ -742,7 +601,6 @@ function bukaPickerShift(idx, type) {
   document.getElementById('pickerJam').classList.add('show');
 }
 
-// Simpan override untuk picker
 const originalPickerSave = pickerSave;
 pickerSave = function() {
   if (pickerTarget === null && currentShiftTarget !== null) {
@@ -778,7 +636,8 @@ async function simpanSemuaShift() {
     } else { toast('Gagal: ' + r.error); }
   } catch(e) { toast('Error: ' + e.message); }
 }
-loadCache();
+
+  loadCache();
   renderTabel();
   refreshData(true);
 }
@@ -1223,27 +1082,7 @@ async function cetakKeIframe(bulan, tahun, dariStr, sampaiStr) {
     }
     html += '</tr>';
   });
-  html += '</tbody></table><div class="picker-overlay" id="modalShift">
-  <div class="picker" style="max-width: 600px;">
-    <div class="picker-header" style="background: #fd7e14;">
-      <span id="shiftTitle">Kelola Shift</span>
-      <button class="pc-close" onclick="tutupModalShift()">&times;</button>
-    </div>
-    <div class="picker-body">
-      <div class="picker-info" id="shiftInfo" style="background:#fff4e6; color:#c2410c;"></div>
-      
-      <div id="shiftList" style="margin-bottom:12px;"></div>
-      
-      <button onclick="tambahBarisShift()" style="width:100%; padding:10px; background:#28A745; color:white; border:none; border-radius:6px; font-weight:bold; margin-bottom:16px; cursor:pointer;">+ Tambah Shift Baru</button>
-      
-      <div class="picker-actions" style="grid-template-columns: 1fr 1fr;">
-        <button class="pc-cancel" onclick="tutupModalShift()">Batal</button>
-        <button class="pc-save" onclick="simpanSemuaShift()">Simpan Semua</button>
-      </div>
-    </div>
-  </div>
-</div>
-</body></html>';
+  html += '</tbody></table></body></html>';
 
   const iframe = document.createElement('iframe');
   iframe.style.position = 'fixed'; iframe.style.right = '0'; iframe.style.bottom = '0';
@@ -1583,154 +1422,7 @@ async function buatMatrix() {
       toast('Gagal: ' + r.error);
     }
   } catch (e) { toast('Gagal: ' + e.message); }
-}// ============ MODAL MULTI-SHIFT ============
-let currentShiftTarget = null;
-let currentShiftData = [];
-
-function bukaModalShift(nama, tgl) {
-  currentShiftTarget = { nama: nama, tgl: tgl };
-  const key = nama + '|' + tgl;
-  currentShiftData = logs[key] ? JSON.parse(JSON.stringify(logs[key])) : [];
-  
-  if (currentShiftData.length === 0) {
-    currentShiftData.push({ out: '', in: '' }); // Default 1 baris kosong
-  }
-  
-  document.getElementById('shiftTitle').textContent = 'Shift - ' + nama;
-  document.getElementById('shiftInfo').innerHTML = '<b>Tanggal:</b> ' + tgl;
-  
-  renderListShift();
-  document.getElementById('modalShift').classList.add('show');
-}
-
-function tutupModalShift() {
-  document.getElementById('modalShift').classList.remove('show');
-  currentShiftTarget = null;
-  currentShiftData = [];
-}
-
-function renderListShift() {
-  const container = document.getElementById('shiftList');
-  container.innerHTML = '';
-  
-  currentShiftData.forEach(function(s, idx) {
-    const row = document.createElement('div');
-    row.style.cssText = 'display:grid; grid-template-columns: 1fr 1fr 40px; gap:8px; margin-bottom:8px; align-items:center;';
-    
-    const inpOut = document.createElement('input');
-    inpOut.type = 'text';
-    inpOut.readOnly = true;
-    inpOut.className = 'cell-input';
-    inpOut.style.cssText = 'width:100%; padding:10px; text-align:center; border:1px solid #ccc; border-radius:5px; font-weight:bold; color:#C00000;';
-    inpOut.value = s.out || '--:--';
-    inpOut.onclick = function() { bukaPickerShift(idx, 'out'); };
-    
-    const inpIn = document.createElement('input');
-    inpIn.type = 'text';
-    inpIn.readOnly = true;
-    inpIn.className = 'cell-input';
-    inpIn.style.cssText = 'width:100%; padding:10px; text-align:center; border:1px solid #ccc; border-radius:5px; font-weight:bold; color:#C00000;';
-    inpIn.value = s.in || '--:--';
-    inpIn.onclick = function() { bukaPickerShift(idx, 'in'); };
-    
-    const btnDel = document.createElement('button');
-    btnDel.innerHTML = '&times;';
-    btnDel.style.cssText = 'background:#dc3545; color:white; border:none; border-radius:5px; height:100%; cursor:pointer; font-size:20px;';
-    btnDel.onclick = function() { hapusBarisShift(idx); };
-    
-    row.appendChild(inpOut);
-    row.appendChild(inpIn);
-    row.appendChild(btnDel);
-    container.appendChild(row);
-  });
-}
-
-function tambahBarisShift() {
-  currentShiftData.push({ out: '', in: '' });
-  renderListShift();
-}
-
-function hapusBarisShift(idx) {
-  currentShiftData.splice(idx, 1);
-  if (currentShiftData.length === 0) currentShiftData.push({ out: '', in: '' });
-  renderListShift();
-}
-
-// Picker khusus untuk modal shift
-let pickerShiftTargetIdx = -1;
-let pickerShiftTargetType = '';
-
-function bukaPickerShift(idx, type) {
-  pickerShiftTargetIdx = idx;
-  pickerShiftTargetType = type;
-  
-  const val = currentShiftData[idx][type];
-  if (val && /^\d{1,2}:\d{2}$/.test(val)) {
-    const parts = val.split(':');
-    pickerHour = parseInt(parts[0], 10);
-    pickerMin = parseInt(parts[1], 10);
-  } else {
-    pickerHour = null; pickerMin = null;
-  }
-  
-  document.getElementById('pickerTitle').textContent = 'Pilih Jam ' + (type === 'out' ? 'OUT' : 'IN');
-  document.getElementById('pickerInfo').innerHTML = '<b>Driver:</b> ' + currentShiftTarget.nama;
-  
-  updatePickerPreview();
-  document.getElementById('pickerJam').classList.add('show');
-}
-
-// Override fungsi pickerSave agar menyimpan ke modal shift
-const originalPickerSave = pickerSave;
-pickerSave = function() {
-  if (!pickerTarget) { // Berarti ini dari modal Shift
-    if (pickerHour === null || pickerMin === null) { toast('Pilih jam dulu'); return; }
-    const timeStr = String(pickerHour).padStart(2,'0') + ':' + String(pickerMin).padStart(2,'0');
-    currentShiftData[pickerShiftTargetIdx][pickerShiftTargetType] = timeStr;
-    renderListShift();
-    document.getElementById('pickerJam').classList.remove('show');
-  } else {
-    originalPickerSave(); // Panggil fungsi asli jika dari tabel utama
-  }
-};
-
-// Override pickerClear
-const originalPickerClear = pickerClear;
-pickerClear = function() {
-  if (!pickerTarget) {
-    currentShiftData[pickerShiftTargetIdx][pickerShiftTargetType] = '';
-    renderListShift();
-    document.getElementById('pickerJam').classList.remove('show');
-  } else {
-    originalPickerClear();
-  }
-};
-
-async function simpanSemuaShift() {
-  if (!currentShiftTarget) return;
-  
-  toast('Menyimpan...');
-  try {
-    const r = await api({
-      action: 'simpan_shifts',
-      nama: currentShiftTarget.nama,
-      tanggal: currentShiftTarget.tgl,
-      shifts: currentShiftData
-    });
-    
-    if (r.ok) {
-      toast('✅ Shift tersimpan');
-      tutupModalShift();
-      refreshData(true); // Refresh tabel
-    } else {
-      toast('Gagal: ' + r.error);
-    }
-  } catch(e) {
-    toast('Error: ' + e.message);
-  }
-}
-
-loadCache();
+}loadCache();
 renderTabel();
 updateBadge();
 refreshData(true);
@@ -1882,43 +1574,7 @@ refreshData(true);
     </div>
   </div>
 </div>
-<div class="picker-overlay" id="modalShift">
-  <div class="picker" style="max-width: 600px;">
-    <div class="picker-header" style="background: #fd7e14;">
-      <span id="shiftTitle">Kelola Shift</span>
-      <button class="pc-close" onclick="tutupModalShift()">&times;</button>
-    </div>
-    <div class="picker-body">
-      <div class="picker-info" id="shiftInfo" style="background:#fff4e6; color:#c2410c;"></div>
-      <div id="shiftList" style="margin-bottom:12px;"></div>
-      <button onclick="tambahBarisShift()" style="width:100%; padding:10px; background:#28A745; color:white; border:none; border-radius:6px; font-weight:bold; margin-bottom:16px; cursor:pointer;">+ Tambah Shift Baru</button>
-      <div class="picker-actions" style="grid-template-columns: 1fr 1fr;">
-        <button class="pc-cancel" onclick="tutupModalShift()">Batal</button>
-        <button class="pc-save" onclick="simpanSemuaShift()">Simpan Semua</button>
-      </div>
-    </div>
-  </div>
-</div>
-<div class="picker-overlay" id="modalShift">
-  <div class="picker" style="max-width: 600px;">
-    <div class="picker-header" style="background: #fd7e14;">
-      <span id="shiftTitle">Kelola Shift</span>
-      <button class="pc-close" onclick="tutupModalShift()">&times;</button>
-    </div>
-    <div class="picker-body">
-      <div class="picker-info" id="shiftInfo" style="background:#fff4e6; color:#c2410c;"></div>
-      
-      <div id="shiftList" style="margin-bottom:12px;"></div>
-      
-      <button onclick="tambahBarisShift()" style="width:100%; padding:10px; background:#28A745; color:white; border:none; border-radius:6px; font-weight:bold; margin-bottom:16px; cursor:pointer;">+ Tambah Shift Baru</button>
-      
-      <div class="picker-actions" style="grid-template-columns: 1fr 1fr;">
-        <button class="pc-cancel" onclick="tutupModalShift()">Batal</button>
-        <button class="pc-save" onclick="simpanSemuaShift()">Simpan Semua</button>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- MODAL MULTI-SHIFT -->
 <div class="picker-overlay" id="modalShift">
   <div class="picker" style="max-width: 600px;">
     <div class="picker-header" style="background: #fd7e14;">
