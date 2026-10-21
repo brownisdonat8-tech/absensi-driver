@@ -438,6 +438,12 @@ function toMins(t) {
   return parseInt(p[0], 10) * 60 + parseInt(p[1], 10); 
 }
 
+function toMins(t) { 
+  if (!t) return 0;
+  const p = String(t).split(':'); 
+  return parseInt(p[0], 10) * 60 + parseInt(p[1], 10); 
+}
+
 async function simpanSemuaShift() {
   if (!currentShiftTarget) return;
 
@@ -459,13 +465,11 @@ async function simpanSemuaShift() {
     const inM = toMins(s.in);
     let inAbs = inM;
     
-    // Deteksi lintas hari (misal OUT 22:00, IN 05:00 -> 05:00 dianggap 29:00)
     if (inM < outM) {
        inAbs = inM + 1440; 
        hasCrossDay = true;
     }
 
-    // Validasi Bentrok dengan shift sebelumnya
     if (lastInAbs !== -1 && outM < lastInAbs) {
        const prev = parsedShifts[parsedShifts.length - 1];
        errorMsg = 'Shift ke-' + (i+1) + ' berangkat jam ' + s.out + ', padahal Shift ke-' + parsedShifts.length + ' baru pulang jam ' + prev.in + '. Silakan sesuaikan jamnya.';
@@ -485,7 +489,6 @@ async function simpanSemuaShift() {
     if (!confirm('Semua shift kosong. Hapus data shift hari ini?')) return;
   }
 
-  // Proses split lintas hari
   let shiftsForToday = [];
   let shiftsForTomorrow = [];
   
@@ -500,7 +503,49 @@ async function simpanSemuaShift() {
     }
   });
 
-  if (hasCrossDay) {
+  let shiftsBsk = [];
+  let tglBsk = '';
+
+  if (shiftsForTomorrow.length > 0) {
+    const d = new Date(currentShiftTarget.tgl + 'T00:00:00');
+    d.setDate(d.getDate() + 1);
+    tglBsk = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    
+    try {
+      const rBsk = await api({ action: 'data', bulan: d.getMonth()+1, tahun: d.getFullYear() });
+      if (rBsk.ok && rBsk.data[currentShiftTarget.nama + '|' + tglBsk]) {
+        shiftsBsk = rBsk.data[currentShiftTarget.nama + '|' + tglBsk];
+      }
+    } catch(e) { console.log(e); }
+
+    let combinedTomorrow = shiftsForTomorrow.concat(shiftsBsk);
+    combinedTomorrow.sort((a, b) => toMins(a.out) - toMins(b.out));
+    
+    let errBsk = '';
+    let lastInBsk = -1;
+    for (let i = 0; i < combinedTomorrow.length; i++) {
+       const s = combinedTomorrow[i];
+       if (!s.out || !s.in) continue; 
+       
+       const outM = toMins(s.out);
+       const inM = toMins(s.in);
+       let inAbs = inM;
+       if (inM < outM) inAbs = inM + 1440; 
+       
+       if (lastInBsk !== -1 && outM < lastInBsk) {
+         errBsk = 'Akan terjadi bentrok pada tanggal ' + tglBsk + '.\nShift baru yang masuk (mulai jam ' + s.out + ') menabrak shift yang sudah ada sebelumnya.';
+         break;
+       }
+       lastInBsk = inAbs;
+    }
+    
+    if (errBsk) {
+       alert('❌ INPUT DITOLAK\n\n' + errBsk + '\n\nSilakan sesuaikan jam Anda atau ubah jadwal di tanggal ' + tglBsk + ' terlebih dahulu.');
+       return;
+    }
+    
+    shiftsBsk = combinedTomorrow;
+
     if (!confirm('⚠️ PERHATIAN: Ada shift yang melewati tengah malam (Pulang < Berangkat).\nSistem akan otomatis membagi shift tersebut ke tanggal besok.\n\nLanjutkan Simpan?')) return;
   }
 
@@ -509,18 +554,7 @@ async function simpanSemuaShift() {
     await api({ action: 'simpan_shifts', nama: currentShiftTarget.nama, tanggal: currentShiftTarget.tgl, shifts: JSON.stringify(shiftsForToday) });
     
     if (shiftsForTomorrow.length > 0) {
-      const d = new Date(currentShiftTarget.tgl + 'T00:00:00');
-      d.setDate(d.getDate() + 1);
-      const tglBsk = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-      
-      const rBsk = await api({ action: 'data', bulan: d.getMonth()+1, tahun: d.getFullYear() });
-      let shiftsBsk = [];
-      if (rBsk.ok && rBsk.data[currentShiftTarget.nama + '|' + tglBsk]) {
-        shiftsBsk = rBsk.data[currentShiftTarget.nama + '|' + tglBsk];
-      }
-      
-      const gabunganBsk = shiftsForTomorrow.concat(shiftsBsk);
-      await api({ action: 'simpan_shifts', nama: currentShiftTarget.nama, tanggal: tglBsk, shifts: JSON.stringify(gabunganBsk) });
+      await api({ action: 'simpan_shifts', nama: currentShiftTarget.nama, tanggal: tglBsk, shifts: JSON.stringify(shiftsBsk) });
     }
 
     toast('✅ Semua Shift tersimpan');
