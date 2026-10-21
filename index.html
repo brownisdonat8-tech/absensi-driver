@@ -491,17 +491,23 @@ function renderTabel() {
   for (let d = 1; d <= jmlHari; d++) html += '<th class="out-col">OUT</th><th class="in-col">IN</th>';
   html += '</tr></thead><tbody>';
 
-  daftarDriver.forEach(function(drv, idx) {
-    html += '<tr><td class="no-col">' + (idx + 1) + '</td><td class="driver-name">' + drv.nama + '</td>';
-    for (let d = 1; d <= jmlHari; d++) {
-      const tgl = curTahun + '-' + String(curBulan).padStart(2,'0') + '-' + String(d).padStart(2,'0');
-      const key = drv.nama + '|' + tgl;
-      const log = logs[key] || { out: '', in: '' };
-      html += '<td class="cell"><input type="time" data-nama="' + drv.nama + '" data-tgl="' + tgl + '" data-tipe="out" value="' + (log.out || '') + '"></td>';
-      html += '<td class="cell"><input type="time" data-nama="' + drv.nama + '" data-tgl="' + tgl + '" data-tipe="in" value="' + (log.in || '') + '"></td>';
-    }
-    html += '</tr>';
-  });
+    daftarDriver.forEach(function(drv, idx) {
+      html += '<tr><td class="no-col">' + (idx + 1) + '</td><td class="driver-name">' + drv.nama + '</td>';
+      for (let d = 1; d <= jmlHari; d++) {
+        const tgl = curTahun + '-' + String(curBulan).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+        const key = drv.nama + '|' + tgl;
+        const shifts = logs[key] || [];
+        
+        let outStr = shifts.map(function(s) { return s.out; }).filter(Boolean).join('<br>');
+        let inStr = shifts.map(function(s) { return s.in; }).filter(Boolean).join('<br>');
+        if (!outStr) outStr = '-';
+        if (!inStr) inStr = '-';
+
+        html += '<td class="cell" style="cursor:pointer; text-align:center; font-size:12px; font-weight:bold; color:#C00000; background:#fff; padding:4px;" onclick="bukaModalShift(\'' + drv.nama + '\', \'' + tgl + '\')">' + outStr + '</td>';
+        html += '<td class="cell" style="cursor:pointer; text-align:center; font-size:12px; font-weight:bold; color:#C00000; background:#fff; padding:4px;" onclick="bukaModalShift(\'' + drv.nama + '\', \'' + tgl + '\')">' + inStr + '</td>';
+      }
+      html += '</tr>';
+    });
   html += '</tbody></table>';
   document.getElementById('tableWrap').innerHTML = html;
 
@@ -1448,6 +1454,23 @@ refreshData(true);
         <button class="pc-clear" onclick="pickerClear()">Kosongkan</button>
         <button class="pc-cancel" onclick="tutupPicker()">Batal</button>
         <button class="pc-save" onclick="pickerSave()">Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="picker-overlay" id="modalShift">
+  <div class="picker" style="max-width: 600px;">
+    <div class="picker-header" style="background: #fd7e14;">
+      <span id="shiftTitle">Kelola Shift</span>
+      <button class="pc-close" onclick="tutupModalShift()">&times;</button>
+    </div>
+    <div class="picker-body">
+      <div class="picker-info" id="shiftInfo" style="background:#fff4e6; color:#c2410c;"></div>
+      <div id="shiftList" style="margin-bottom:12px;"></div>
+      <button onclick="tambahBarisShift()" style="width:100%; padding:10px; background:#28A745; color:white; border:none; border-radius:6px; font-weight:bold; margin-bottom:16px; cursor:pointer;">+ Tambah Shift Baru</button>
+      <div class="picker-actions" style="grid-template-columns: 1fr 1fr;">
+        <button class="pc-cancel" onclick="tutupModalShift()">Batal</button>
+        <button class="pc-save" onclick="simpanSemuaShift()">Simpan Semua</button>
       </div>
     </div>
   </div>
