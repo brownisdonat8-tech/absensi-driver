@@ -6,104 +6,26 @@
 <meta name="theme-color" content="#FFC000">
 <title>Absensi Driver</title>
 <style>
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
-body { font-family: Arial, sans-serif; background: #fff; font-size: 13px; display: flex; flex-direction: column; }
-header { background: #FFC000; padding: 8px 10px; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
-h1 { margin: 0 0 6px 0; font-size: 15px; text-align: center; }
-.toolbar { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; align-items: center; }
-.toolbar button { padding: 8px 12px; background: #4472C4; color: white; border: none; border-radius: 5px; font-size: 12px; font-family: Arial; font-weight: bold; cursor: pointer; }
-.toolbar .btn-green { background: #28A745; }
-.toolbar .btn-cyan { background: #17A2B8; }
-.toolbar .btn-orange { background: #fd7e14; }
-.toolbar .btn-purple { background: #6f42c1; }
-.toolbar .btn-teal { background: #0d9488; }
-.toolbar .btn-ringkasan { background: #9333ea; }
-.status-badge { position: fixed; top: 4px; right: 6px; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: bold; color: white; z-index: 100; }
-.status-badge.online { background: #28A745; }
-.status-badge.offline { background: #dc3545; }
-.status-badge.pending { background: #fd7e14; }
-.status-badge.syncing { background: #17A2B8; }
+/* === TABEL & FREEZE PANE === */
 .table-wrap { flex: 1; overflow: auto; -webkit-overflow-scrolling: touch; }
-table { border-collapse: collapse; background: white; }
-th, td { border: 1px solid #000; padding: 4px; text-align: center; font-size: 11px; white-space: nowrap; vertical-align: middle; }
-th { background: #FFC000; font-weight: bold; }
-th.day-header.monday { background: #FF0000; color: white; }
-th.out-col { background: #92D050; }
-th.in-col { background: #C6E0B4; }
-td.no-col { background: #FFF2CC; width: 28px; }
-td.driver-name { background: #FFF2CC; font-weight: bold; text-align: left; padding: 0 6px; min-width: 80px; }
-td.cell { padding: 0; cursor: pointer; }
-td.cell:hover { background: #f0f0f0; }
-.modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; overflow: auto; padding: 10px; }
-.modal-bg.show { display: flex; align-items: center; justify-content: center; }
-.modal { background: white; border-radius: 8px; max-width: 640px; width: 100%; margin: 10px auto; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-.modal-header { background: #28A745; color: white; padding: 12px 16px; font-weight: bold; font-size: 15px; display: flex; justify-content: space-between; align-items: center; border-radius: 8px 8px 0 0; }
-.modal-close { background: none; border: none; color: white; font-size: 22px; cursor: pointer; padding: 0 6px; }
-.modal-body { padding: 14px; }
-.row-add { display: grid; grid-template-columns: 2fr 1.2fr 0.8fr; gap: 6px; align-items: end; margin-bottom: 12px; }
-.row-add input { padding: 9px; border: 1px solid #ccc; border-radius: 5px; font-size: 13px; }
-.row-add input[type=text] { text-transform: uppercase; }
-.row-add button { padding: 9px; background: #28A745; color: white; border: none; border-radius: 5px; font-weight: bold; font-size: 13px; cursor: pointer; height: 38px; }
-.tbl-drv { width: 100%; border-collapse: collapse; font-size: 12px; }
-.tbl-drv th { background: #f0f0f0; padding: 6px 4px; text-align: left; border-bottom: 2px solid #ccc; font-size: 10px; }
-.tbl-drv td { padding: 5px 3px; border-bottom: 1px solid #eee; }
-.tbl-drv input { width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; box-sizing: border-box; }
-.badge { font-size: 9px; padding: 2px 6px; border-radius: 8px; font-weight: bold; }
-.badge.aktif { background: #28A745; color: white; }
-.badge.resign { background: #dc3545; color: white; }
-.badge.belum { background: #ffc107; color: #333; }
-.btn-sm { padding: 5px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 10px; color: white; font-weight: bold; }
-.btn-save { background: #4472C4; }
-.btn-del { background: #dc3545; }
-.btn-aktif { background: #28A745; }
-.hint { font-size: 11px; color: #555; margin-top: 10px; padding: 8px; background: #f8f9fa; border-left: 3px solid #FFC000; border-radius: 3px; }
-.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; z-index: 9999; opacity: 0; transition: opacity 0.3s; pointer-events: none; max-width: 90%; text-align: center; }
-.toast.show { opacity: 1; }
-.picker-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 9999; align-items: center; justify-content: center; padding: 12px; }
-.picker-overlay.show { display: flex; }
-.picker { background: white; border-radius: 10px; max-width: 520px; width: 100%; max-height: 95vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
-.picker-header { background: #4472C4; color: white; padding: 14px 18px; border-radius: 10px 10px 0 0; display: flex; justify-content: space-between; align-items: center; }
-.picker-header span { font-size: 15px; font-weight: bold; }
-.picker-header .pc-close { background: none; border: none; color: white; font-size: 26px; cursor: pointer; padding: 0 6px; line-height: 1; }
-.picker-body { padding: 16px; }
-.picker-info { background: #EFF6FF; padding: 10px 12px; border-radius: 6px; margin-bottom: 14px; font-size: 13px; color: #1e40af; }
-.picker-info b { color: #4472C4; }
-.picker-section { margin-bottom: 14px; }
-.picker-label { font-weight: bold; font-size: 13px; margin-bottom: 6px; color: #333; text-transform: uppercase; letter-spacing: 1px; }
-.picker-grid { display: grid; gap: 6px; grid-template-columns: repeat(6, 1fr); }
-.picker-grid-min { grid-template-columns: repeat(10, 1fr); gap: 4px; }
-.picker-grid-min .picker-cell { padding: 8px 2px; font-size: 12px; }
-.picker-cell { padding: 12px 4px; text-align: center; background: #f0f0f0; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; border: 2px solid transparent; font-family: "Courier New", monospace; user-select: none; -webkit-tap-highlight-color: transparent; }
-.picker-cell:hover { background: #e0e0e0; }
-.picker-cell.selected { background: #4472C4; color: white; border-color: #2E5597; box-shadow: 0 0 0 3px rgba(68,114,196,0.3); }
-.picker-preview { text-align: center; font-size: 40px; font-weight: bold; color: #C00000; padding: 14px; background: #FFF9C4; border-radius: 8px; margin: 14px 0; font-family: "Courier New", monospace; letter-spacing: 3px; border: 2px dashed #FFC000; }
-.picker-actions { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 8px; }
-.picker-actions button { padding: 13px 8px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; color: white; font-family: Arial; }
-.pc-clear { background: #dc3545; }
-.pc-cancel { background: #6c757d; }
-.pc-save { background: #28A745; }
-.pc-clear:active, .pc-cancel:active, .pc-save:active { opacity: 0.8; }
-@media (max-width: 480px) {
-  .picker-cell { padding: 10px 2px; font-size: 14px; }
-  .picker-preview { font-size: 34px; padding: 10px; }
-}
-/* === FREEZE PANE (STICKY COLUMNS) === */
-table { border-collapse: separate; border-spacing: 0; }
-thead th { position: sticky; top: 0; z-index: 10; background-color: #FFC000; border-top: 1px solid #000; }
-th.sticky-no { position: sticky; left: 0; z-index: 30; background-color: #FFF2CC; border-right: 1px solid #999; }
-th.sticky-nama { position: sticky; left: 28px; z-index: 30; background-color: #FFF2CC; border-right: 2px solid #333; }
-td.sticky-no { position: sticky; left: 0; z-index: 5; background-color: #FFF2CC; border-right: 1px solid #999; }
-td.sticky-nama { position: sticky; left: 28px; z-index: 5; background-color: #FFF2CC; border-right: 2px solid #333; }
+table { border-collapse: separate; border-spacing: 0; width: max-content; background: white; }
+th, td { border-right: 1px solid #000; border-bottom: 1px solid #000; padding: 4px; text-align: center; font-size: 11px; white-space: nowrap; background-color: #fff; }
+thead th { border-top: 1px solid #000; background-color: #FFC000; font-weight: bold; position: sticky; top: 0; z-index: 10; }
+th:first-child, td:first-child { border-left: 1px solid #000; }
 
-th.sticky-rng-no { position: sticky; left: 0; z-index: 20; background-color: #9333ea; color: white; border-right: 1px solid #999; }
-th.sticky-rng-nama { position: sticky; left: 28px; z-index: 20; background-color: #f3f4f6; border-right: 2px solid #333; }
-td.sticky-rng-no { position: sticky; left: 0; z-index: 5; background-color: #9333ea; color: white; border-right: 1px solid #999; }
-td.sticky-rng-nama { position: sticky; left: 28px; z-index: 5; background-color: #f3f4f6; border-right: 2px solid #333; }
+/* Sticky Kolom Kiri */
+th.no-col, td.no-col { position: sticky; left: 0; z-index: 20; background-color: #FFF2CC; width: 30px; min-width: 30px; }
+th.nama-col, td.nama-col { position: sticky; left: 30px; z-index: 20; background-color: #FFF2CC; border-right: 2px solid #000; text-align: left; padding-left: 6px; min-width: 80px; font-weight: bold; }
 
-th, td { border-left: none; border-top: none; }
-td:first-child, th:first-child { border-left: 1px solid #000; }
-tr:first-child th { border-top: 1px solid #000; }</style>
+/* Sticky Header Kiri (Harus di atas segalanya) */
+thead th.no-col { z-index: 30; }
+thead th.nama-col { z-index: 30; }
+
+/* Warna Header Spesifik */
+th.day-header.monday { background-color: #FF0000; color: white; }
+th.out-col { background-color: #92D050; }
+th.in-col { background-color: #C6E0B4; }
+</style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -118,7 +40,8 @@ tr:first-child th { border-top: 1px solid #000; }</style>
     <button class="btn-green" onclick="bukaModal('modalDriver')">&#9881; Driver</button>
     <button class="btn-cyan" onclick="refreshData()">&#8635; Sync</button>
     <button class="btn-orange" onclick="cekDataKosong()">&#9888;&#65039; Cek Data</button>
-    <button class="btn-orange" onclick="cekDataKosong()">&#9888;&#65039; Cek Data</button>
+    
+    
     <button class="btn-orange" onclick="bukaModalExport()">&#128190; Export Excel</button>
     <button class="btn-purple" onclick="buatMatrix()">&#128202; Matrix</button>
     <button class="btn-teal" onclick="uploadMatrix()">&#128229; Upload Matrix</button>
@@ -344,8 +267,8 @@ function renderTabel() {
   document.getElementById('bulanLabel').innerText = NAMA_BULAN[curBulan] + ' ' + curTahun;
 
   let html = '<table><thead><tr>';
-  html += '<th rowspan="2" class="sticky-no" style="z-index: 30; text-align:center; vertical-align:middle;">NO</th>';
-  html += '<th rowspan="2" class="sticky-nama" style="z-index: 30; text-align:center; vertical-align:middle;">NAMA</th>';
+  html += '<th rowspan="2" class="no-col" style="text-align:center; vertical-align:middle;">NO</th>';
+  html += '<th rowspan="2" class="nama-col" style="text-align:center; vertical-align:middle;">NAMA</th>';
   
   for (let d = 1; d <= jmlHari; d++) {
     const tgl = new Date(curTahun, curBulan - 1, d);
@@ -364,7 +287,7 @@ function renderTabel() {
   html += '</tr></thead><tbody>';
 
   daftarDriver.forEach(function(drv, idx) {
-    html += '<tr><td class="sticky-no" style="text-align:center;">' + (idx + 1) + '</td><td class="sticky-nama" style="text-align:left; font-weight:bold; padding-left:6px;">' + drv.nama + '</td>';
+    html += '<tr><td class="no-col" style="text-align:center;">' + (idx + 1) + '</td><td class="nama-col">' + drv.nama + '</td>';
     for (let d = 1; d <= jmlHari; d++) {
       const tgl = curTahun + '-' + String(curBulan).padStart(2,'0') + '-' + String(d).padStart(2,'0');
       const key = drv.nama + '|' + tgl;
