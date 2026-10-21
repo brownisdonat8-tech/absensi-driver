@@ -444,6 +444,12 @@ function toMins(t) {
   return parseInt(p[0], 10) * 60 + parseInt(p[1], 10); 
 }
 
+function toMins(t) { 
+  if (!t) return 0;
+  const p = String(t).split(':'); 
+  return parseInt(p[0], 10) * 60 + parseInt(p[1], 10); 
+}
+
 async function simpanSemuaShift() {
   if (!currentShiftTarget) return;
 
@@ -452,28 +458,31 @@ async function simpanSemuaShift() {
   let parsedShifts = [];
   let hasCrossDay = false;
 
+  // 1. Validasi Hari Ini
   for (let i = 0; i < currentShiftData.length; i++) {
     const s = currentShiftData[i];
     if (!s.out && !s.in) continue; 
     
-    if (!s.out || !s.in) { 
-      errorMsg = 'Shift ke-' + (i+1) + ' belum lengkap. Harap isi jam OUT dan IN.'; 
-      break; 
+    if (!s.out) {
+      errorMsg = 'Shift ke-' + (i+1) + ' memiliki jam IN tetapi OUT kosong.';
+      break;
     }
-
+    
     const outM = toMins(s.out);
-    const inM = toMins(s.in);
+    let inM = s.in ? toMins(s.in) : 1439; 
     let inAbs = inM;
     
-    if (inM < outM) {
-       inAbs = inM + 1440; 
-       hasCrossDay = true;
-    }
-
+    // Cek bentrok (jika OUT lebih awal dari IN shift sebelumnya)
     if (lastInAbs !== -1 && outM < lastInAbs) {
        const prev = parsedShifts[parsedShifts.length - 1];
-       errorMsg = 'Shift ke-' + (i+1) + ' berangkat jam ' + s.out + ', padahal Shift ke-' + parsedShifts.length + ' baru pulang jam ' + prev.in + '. Silakan sesuaikan jamnya.';
+       errorMsg = 'Shift ke-' + (i+1) + ' berangkat jam ' + s.out + ', padahal Shift ke-' + parsedShifts.length + ' baru pulang jam ' + (prev.in || '23:59') + '.';
        break;
+    }
+
+    // Cek Lintas Hari
+    if (s.in && inM < outM) {
+       inAbs = inM + 1440; 
+       hasCrossDay = true;
     }
 
     lastInAbs = inAbs;
@@ -481,7 +490,7 @@ async function simpanSemuaShift() {
   }
 
   if (errorMsg) {
-    alert('❌ INPUT DITOLAK\n\n' + errorMsg + '\n\nPastikan jam berurutan dari pagi ke malam.');
+    alert('❌ INPUT DITOLAK\n\n' + errorMsg + '\n\nPastikan urutan jam benar dan lengkapi shift sebelumnya.');
     return;
   }
 
@@ -489,13 +498,14 @@ async function simpanSemuaShift() {
     if (!confirm('Semua shift kosong. Hapus data shift hari ini?')) return;
   }
 
+  // 2. Pisahkan shift hari ini & besok
   let shiftsForToday = [];
   let shiftsForTomorrow = [];
   
   parsedShifts.forEach(function(s) {
     const outM = toMins(s.out);
-    const inM = toMins(s.in);
-    if (inM < outM) {
+    const inM = s.in ? toMins(s.in) : 0;
+    if (s.in && inM < outM) {
       shiftsForToday.push({ out: s.out, in: '23:59' });
       shiftsForTomorrow.push({ out: '00:00', in: s.in });
     } else {
@@ -506,6 +516,7 @@ async function simpanSemuaShift() {
   let shiftsBsk = [];
   let tglBsk = '';
 
+  // 3. Validasi Hari Besok (jika ada lintas hari)
   if (shiftsForTomorrow.length > 0) {
     const d = new Date(currentShiftTarget.tgl + 'T00:00:00');
     d.setDate(d.getDate() + 1);
@@ -525,28 +536,39 @@ async function simpanSemuaShift() {
     let lastInBsk = -1;
     for (let i = 0; i < combinedTomorrow.length; i++) {
        const s = combinedTomorrow[i];
-       if (!s.out || !s.in) continue; 
+       if (!s.out && !s.in) continue; 
        
-       const outM = toMins(s.out);
-       const inM = toMins(s.in);
-       let inAbs = inM;
-       if (inM < outM) inAbs = inM + 1440; 
-       
-       if (lastInBsk !== -1 && outM < lastInBsk) {
-         errBsk = 'Akan terjadi bentrok pada tanggal ' + tglBsk + '.\nShift baru yang masuk (mulai jam ' + s.out + ') menabrak shift yang sudah ada sebelumnya.';
+       if (!s.out) {
+         errBsk = 'Data pada tanggal ' + tglBsk + ' memiliki jam IN tanpa jam OUT. Harap perbaiki manual di Google Sheets.';
          break;
        }
+       
+       const outM = toMins(s.out);
+       let inM = s.in ? toMins(s.in) : 1439;
+       let inAbs = inM;
+       
+       if (lastInBsk !== -1 && outM < lastInBsk) {
+         errBsk = 'Akan terjadi bentrok pada tanggal ' + tglBsk + '.\nShift baru (mulai jam ' + s.out + ') menabrak shift sebelumnya (atau shift sebelumnya belum diisi jam IN-nya).';
+         break;
+       }
+       
+       if (s.in && inM < outM) {
+         inAbs = inM + 1440;
+       }
+       
        lastInBsk = inAbs;
     }
     
     if (errBsk) {
-       alert('❌ INPUT DITOLAK\n\n' + errBsk + '\n\nSilakan sesuaikan jam Anda atau ubah jadwal di tanggal ' + tglBsk + ' terlebih dahulu.');
+       alert('❌ INPUT DITOLAK\n\n' + errBsk + '\n\nSilakan sesuaikan jam Anda atau lengkapi shift di tanggal ' + tglBsk + ' terlebih dahulu.');
        return;
     }
     
     shiftsBsk = combinedTomorrow;
-
-    if (!confirm('⚠️ PERHATIAN: Ada shift yang melewati tengah malam (Pulang < Berangkat).\nSistem akan otomatis membagi shift tersebut ke tanggal besok.\n\nLanjutkan Simpan?')) return;
+  }
+  
+  if (hasCrossDay) {
+    if (!confirm('⚠️ PERHATIAN: Ada shift yang melewati tengah malam.\nSistem akan otomatis membagi shift tersebut ke tanggal besok.\n\nLanjutkan Simpan?')) return;
   }
 
   toast('Menyimpan...');
