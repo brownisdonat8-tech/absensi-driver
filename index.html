@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#FFC000">
-<meta name="mobile-web-app-capable" content="yes">
 <title>Absensi Driver</title>
 <style>
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -14,12 +13,12 @@ header { background: #FFC000; padding: 8px 10px; flex-shrink: 0; box-shadow: 0 2
 h1 { margin: 0 0 6px 0; font-size: 15px; text-align: center; }
 .toolbar { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; align-items: center; }
 .toolbar button { padding: 8px 12px; background: #4472C4; color: white; border: none; border-radius: 5px; font-size: 12px; font-family: Arial; font-weight: bold; cursor: pointer; }
-.toolbar button:active { opacity: 0.7; }
 .toolbar .btn-green { background: #28A745; }
 .toolbar .btn-cyan { background: #17A2B8; }
 .toolbar .btn-orange { background: #fd7e14; }
 .toolbar .btn-purple { background: #6f42c1; }
-.bulan-label { display: inline-flex; align-items: center; padding: 0 10px; font-weight: bold; font-size: 13px; min-width: 120px; justify-content: center; }
+.toolbar .btn-teal { background: #0d9488; }
+.toolbar .btn-ringkasan { background: #9333ea; }
 .status-badge { position: fixed; top: 4px; right: 6px; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: bold; color: white; z-index: 100; }
 .status-badge.online { background: #28A745; }
 .status-badge.offline { background: #dc3545; }
@@ -35,14 +34,11 @@ th.out-col { background: #92D050; position: sticky; top: 47px; z-index: 7; }
 th.in-col { background: #C6E0B4; position: sticky; top: 47px; z-index: 7; }
 td.no-col { background: #FFF2CC; width: 28px; position: sticky; left: 0; z-index: 3; }
 td.driver-name { background: #FFF2CC; font-weight: bold; text-align: left; padding: 0 6px; position: sticky; left: 28px; z-index: 3; min-width: 80px; }
-td.cell { padding: 0; }
-td.cell input { width: 90px; height: 34px; font-size: 14px; border: none; background: transparent; text-align: center; font-size: 12px; font-family: Arial; padding: 0; color: #C00000; font-weight: bold; }
-td.cell input:focus { background: #FFF9C4; outline: 2px solid #4472C4; }
-td.cell input.saved { background: #C6EFCE; }
-td.cell input.queued { background: #FFE5B4; }
+td.cell { padding: 0; cursor: pointer; }
+td.cell:hover { background: #f0f0f0; }
 .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; overflow: auto; padding: 10px; }
-.modal-bg.show { display: block; }
-.modal { background: white; border-radius: 8px; max-width: 640px; margin: 10px auto; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+.modal-bg.show { display: flex; align-items: center; justify-content: center; }
+.modal { background: white; border-radius: 8px; max-width: 640px; width: 100%; margin: 10px auto; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
 .modal-header { background: #28A745; color: white; padding: 12px 16px; font-weight: bold; font-size: 15px; display: flex; justify-content: space-between; align-items: center; border-radius: 8px 8px 0 0; }
 .modal-close { background: none; border: none; color: white; font-size: 22px; cursor: pointer; padding: 0 6px; }
 .modal-body { padding: 14px; }
@@ -54,7 +50,6 @@ td.cell input.queued { background: #FFE5B4; }
 .tbl-drv th { background: #f0f0f0; padding: 6px 4px; text-align: left; border-bottom: 2px solid #ccc; font-size: 10px; }
 .tbl-drv td { padding: 5px 3px; border-bottom: 1px solid #eee; }
 .tbl-drv input { width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; box-sizing: border-box; }
-.tbl-drv input[type=text] { text-transform: uppercase; }
 .badge { font-size: 9px; padding: 2px 6px; border-radius: 8px; font-weight: bold; }
 .badge.aktif { background: #28A745; color: white; }
 .badge.resign { background: #dc3545; color: white; }
@@ -66,83 +61,6 @@ td.cell input.queued { background: #FFE5B4; }
 .hint { font-size: 11px; color: #555; margin-top: 10px; padding: 8px; background: #f8f9fa; border-left: 3px solid #FFC000; border-radius: 3px; }
 .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; z-index: 9999; opacity: 0; transition: opacity 0.3s; pointer-events: none; max-width: 90%; text-align: center; }
 .toast.show { opacity: 1; }
-</style>
-<style id="sticky-fix">
-/* ===== FIX STICKY HEADER ===== */
-thead th {
-  background-color: #FFC000;
-  position: sticky;
-  top: 0;
-  vertical-align: middle;
-  z-index: 10;
-}
-thead tr:first-child th {
-  height: 40px;
-  box-sizing: border-box;
-}
-thead tr:first-child th:nth-child(1) {
-  left: 0 !important;
-  z-index: 40 !important;
-}
-thead tr:first-child th:nth-child(2) {
-  left: 28px !important;
-  z-index: 40 !important;
-  border-right: 2px solid #333 !important;
-}
-thead th.day-header {
-  z-index: 20;
-  padding: 3px 4px;
-  line-height: 1.15;
-  font-size: 10px;
-}
-thead th.day-header.monday {
-  background-color: #FF0000;
-  color: white;
-}
-thead tr:nth-child(2) th {
-  top: 40px;
-  z-index: 15;
-  vertical-align: middle;
-}
-thead th.out-col { background-color: #92D050; }
-thead th.in-col { background-color: #C6E0B4; }
-tbody td.no-col {
-  position: sticky;
-  left: 0;
-  z-index: 8;
-  background-color: #FFF2CC;
-}
-tbody td.driver-name {
-  position: sticky;
-  left: 28px;
-  z-index: 8;
-  background-color: #FFF2CC;
-  border-right: 2px solid #333;
-}
-</style>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<style id="print-style">
-@media print {
-  @page { size: A4 landscape; margin: 0.5cm; }
-  header, .toolbar, .status-badge, .toast, .modal-bg, .info, button { display: none !important; }
-  body { display: block; font-size: 10px; padding: 0; margin: 0; background: white; }
-  .table-wrap { overflow: visible !important; max-height: none !important; height: auto !important; }
-  table { font-size: 8px !important; page-break-inside: auto; }
-  th, td { padding: 1px 2px !important; border: 1px solid #333 !important; }
-  th.driver-col, th.day-header, th.out-col, th.in-col, td.no-col, td.driver-name {
-    position: static !important; left: auto !important; top: auto !important; z-index: auto !important;
-  }
-  td.cell input { display: none !important; }
-  td.cell .print-val { display: inline-block !important; font-size: 8px !important; padding: 1px !important; }
-  h1 { font-size: 12px !important; margin: 4px 0 !important; }
-  .print-header { display: block !important; text-align: center; font-weight: bold; font-size: 12px; margin-bottom: 4px; }
-  tr { page-break-inside: avoid; }
-}
-.print-val { display: none; }
-.print-header { display: none; }
-</style>
-<style id="picker-style">
 .picker-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 9999; align-items: center; justify-content: center; padding: 12px; }
 .picker-overlay.show { display: flex; }
 .picker { background: white; border-radius: 10px; max-width: 520px; width: 100%; max-height: 95vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
@@ -155,6 +73,8 @@ tbody td.driver-name {
 .picker-section { margin-bottom: 14px; }
 .picker-label { font-weight: bold; font-size: 13px; margin-bottom: 6px; color: #333; text-transform: uppercase; letter-spacing: 1px; }
 .picker-grid { display: grid; gap: 6px; grid-template-columns: repeat(6, 1fr); }
+.picker-grid-min { grid-template-columns: repeat(10, 1fr); gap: 4px; }
+.picker-grid-min .picker-cell { padding: 8px 2px; font-size: 12px; }
 .picker-cell { padding: 12px 4px; text-align: center; background: #f0f0f0; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; border: 2px solid transparent; font-family: "Courier New", monospace; user-select: none; -webkit-tap-highlight-color: transparent; }
 .picker-cell:hover { background: #e0e0e0; }
 .picker-cell.selected { background: #4472C4; color: white; border-color: #2E5597; box-shadow: 0 0 0 3px rgba(68,114,196,0.3); }
@@ -170,6 +90,8 @@ tbody td.driver-name {
   .picker-preview { font-size: 34px; padding: 10px; }
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -177,23 +99,23 @@ tbody td.driver-name {
   <h1 id="judul">KINERJA DRIVER</h1>
   <div class="toolbar">
     <button onclick="geserBulan(-1)">&#8592;</button>
-    <span class="bulan-label" id="bulanLabel">-</span>
+    <span id="bulanLabel" style="display: inline-flex; align-items: center; padding: 0 10px; font-weight: bold; font-size: 13px;">-</span>
     <button onclick="geserBulan(1)">&#8594;</button>
     <button class="btn-green" onclick="bukaModal('modalDriver')">&#9881; Driver</button>
     <button class="btn-cyan" onclick="refreshData()">&#8635; Sync</button>
     <button class="btn-orange" onclick="bukaModalExport()">&#128190; Export Excel</button>
     <button class="btn-purple" onclick="buatMatrix()">&#128202; Matrix</button>
-    <button class="btn-cyan" onclick="uploadMatrix()" style="background:#0d9488;">&#128229; Upload Matrix</button>
+    <button class="btn-teal" onclick="uploadMatrix()">&#128229; Upload Matrix</button>
     <button class="btn-orange" onclick="printHalaman()">&#128424; Print</button>
-    <button onclick="bukaModalRingkasan()" style="background:#9333ea;color:white;border:none;padding:8px 12px;border-radius:5px;font-size:12px;font-weight:bold;cursor:pointer;">&#9201; Ringkasan</button>
-    <a href="panduan.html" target="_blank" style="text-decoration:none;display:inline-block;"><button style="background:#dc3545;color:white;border:none;padding:8px 12px;border-radius:5px;font-size:12px;font-weight:bold;cursor:pointer;">&#10067; Panduan</button></a>
-    <button onclick="bukaModalAutoBackup()" style="background:#059669;color:white;border:none;padding:8px 12px;border-radius:5px;font-size:12px;font-weight:bold;cursor:pointer;">&#128190; Auto-Backup</button>
+    <button class="btn-ringkasan" onclick="bukaModalRingkasan()">&#9201; Ringkasan</button>
+    <a href="panduan.html" target="_blank" style="text-decoration:none;"><button style="background:#dc3545;color:white;border:none;padding:8px 12px;border-radius:5px;font-size:12px;font-weight:bold;cursor:pointer;">&#10067; Panduan</button></a>
   </div>
 </header>
 
 <div class="status-badge" id="statusBadge">...</div>
 <div class="table-wrap" id="tableWrap"></div>
 
+<!-- Modal Driver -->
 <div class="modal-bg" id="modalDriver">
   <div class="modal">
     <div class="modal-header">
@@ -207,16 +129,92 @@ tbody td.driver-name {
         <div><button onclick="tambahDriver()">+ Tambah</button></div>
       </div>
       <table class="tbl-drv">
-        <thead><tr>
-          <th style="width:26%">Nama</th>
-          <th style="width:20%">Mulai</th>
-          <th style="width:20%">Resign</th>
-          <th style="width:14%">Status</th>
-          <th style="width:20%">Aksi</th>
-        </tr></thead>
+        <thead><tr><th>Nama</th><th>Mulai</th><th>Resign</th><th>Status</th><th>Aksi</th></tr></thead>
         <tbody id="tblDriver"></tbody>
       </table>
-      <div class="hint">&#9432; Isi <b>Resign</b> lalu klik <b>Simpan</b> &rarr; driver hilang dari bulan setelahnya.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Picker Jam -->
+<div class="picker-overlay" id="pickerJam">
+  <div class="picker">
+    <div class="picker-header">
+      <span id="pickerTitle">Pilih Jam</span>
+      <button class="pc-close" onclick="tutupPicker()">&times;</button>
+    </div>
+    <div class="picker-body">
+      <div class="picker-info" id="pickerInfo"></div>
+      <div class="picker-section"><div class="picker-label">Jam</div><div class="picker-grid" id="pickerHourGrid"></div></div>
+      <div class="picker-section"><div class="picker-label">Menit</div><div class="picker-grid picker-grid-min" id="pickerMinGrid"></div></div>
+      <div class="picker-preview" id="pickerPreview">--:--</div>
+      <div class="picker-actions">
+        <button class="pc-clear" onclick="pickerClear()">Kosongkan</button>
+        <button class="pc-cancel" onclick="tutupPicker()">Batal</button>
+        <button class="pc-save" onclick="pickerSave()">Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Multi-Shift -->
+<div class="picker-overlay" id="modalShift">
+  <div class="picker" style="max-width: 600px;">
+    <div class="picker-header" style="background: #fd7e14;">
+      <span id="shiftTitle">Kelola Shift</span>
+      <button class="pc-close" onclick="tutupModalShift()">&times;</button>
+    </div>
+    <div class="picker-body">
+      <div class="picker-info" id="shiftInfo" style="background:#fff4e6; color:#c2410c;"></div>
+      <div id="shiftList" style="margin-bottom:12px;"></div>
+      <button onclick="tambahBarisShift()" style="width:100%; padding:10px; background:#28A745; color:white; border:none; border-radius:6px; font-weight:bold; margin-bottom:16px; cursor:pointer;">+ Tambah Shift Baru</button>
+      <div class="picker-actions" style="grid-template-columns: 1fr 1fr;">
+        <button class="pc-cancel" onclick="tutupModalShift()">Batal</button>
+        <button class="pc-save" onclick="simpanSemuaShift()">Simpan Semua</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Export -->
+<div class="modal-bg" id="modalExport">
+  <div class="modal">
+    <div class="modal-header" style="background:#fd7e14;"><span>&#128190; Export Excel</span><button class="modal-close" onclick="tutupModal('modalExport')">&times;</button></div>
+    <div class="modal-body">
+      <div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:bold;">Bulan</label><select id="expBulan" style="width:100%;padding:9px;border:1px solid #ccc;border-radius:5px;font-size:14px;"><option value="1">JANUARI</option><option value="2">FEBRUARI</option><option value="3">MARET</option><option value="4">APRIL</option><option value="5">MEI</option><option value="6">JUNI</option><option value="7">JULI</option><option value="8">AGUSTUS</option><option value="9">SEPTEMBER</option><option value="10">OKTOBER</option><option value="11">NOVEMBER</option><option value="12">DESEMBER</option></select></div>
+      <div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:bold;">Tahun</label><input type="number" id="expTahun" style="width:100%;padding:9px;border:1px solid #ccc;border-radius:5px;font-size:14px;"></div>
+      <div style="margin-bottom:10px;padding:8px;background:#f8f9fa;border-radius:5px;"><label style="font-size:12px;cursor:pointer;"><input type="checkbox" id="expPakaiRange" onchange="toggleRange()"> Pakai rentang tanggal</label></div>
+      <div id="rangeFields" style="display:none;">
+        <div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:bold;">Dari</label><input type="date" id="expDari" style="width:100%;padding:9px;border:1px solid #ccc;border-radius:5px;"></div>
+        <div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:bold;">Sampai</label><input type="date" id="expSampai" style="width:100%;padding:9px;border:1px solid #ccc;border-radius:5px;"></div>
+      </div>
+      <button onclick="exportXLSXRange()" style="width:100%;padding:12px;background:#fd7e14;color:white;border:none;border-radius:5px;font-size:15px;font-weight:bold;margin-top:12px;cursor:pointer;">&#128190; Download Excel</button>
+      <button onclick="cetakKeIframe(Number(document.getElementById('expBulan').value), Number(document.getElementById('expTahun').value), document.getElementById('expDari').value, document.getElementById('expSampai').value)" style="width:100%;padding:12px;background:#6c757d;color:white;border:none;border-radius:5px;font-size:15px;font-weight:bold;margin-top:8px;cursor:pointer;">&#128424; Print Range Ini</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Ringkasan -->
+<div class="modal-bg" id="modalRingkasan">
+  <div class="modal" style="max-width:98%;">
+    <div class="modal-header" style="background:#9333ea;"><span>&#9201; Ringkasan Kinerja</span><button class="modal-close" onclick="tutupModal('modalRingkasan')">&times;</button></div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div><label style="font-size:11px;font-weight:bold;">Bulan</label><select id="rngBulan" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:5px;"><option value="1">JANUARI</option><option value="2">FEBRUARI</option><option value="3">MARET</option><option value="4">APRIL</option><option value="5">MEI</option><option value="6">JUNI</option><option value="7">JULI</option><option value="8">AGUSTUS</option><option value="9">SEPTEMBER</option><option value="10">OKTOBER</option><option value="11">NOVEMBER</option><option value="12">DESEMBER</option></select></div>
+        <div><label style="font-size:11px;font-weight:bold;">Tahun</label><input type="number" id="rngTahun" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:5px;"></div>
+      </div>
+      <div style="margin-bottom:10px;"><label style="font-size:12px;cursor:pointer;"><input type="checkbox" id="rngPakaiRange" onchange="document.getElementById('rngRangeFields').style.display=this.checked?'block':'none'"> Pakai range tanggal</label></div>
+      <div id="rngRangeFields" style="display:none;margin-bottom:10px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div><label style="font-size:11px;font-weight:bold;">Dari</label><input type="date" id="rngDari" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:5px;"></div>
+          <div><label style="font-size:11px;font-weight:bold;">Sampai</label><input type="date" id="rngSampai" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:5px;"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:12px;">
+        <button onclick="renderRingkasan()" style="flex:1;padding:10px;background:#9333ea;color:white;border:none;border-radius:5px;font-weight:bold;cursor:pointer;">&#128269; Tampilkan</button>
+        <button onclick="exportRingkasanXLSX()" style="flex:1;padding:10px;background:#28A745;color:white;border:none;border-radius:5px;font-weight:bold;cursor:pointer;">&#128190; Export XLSX</button>
+      </div>
+      <div id="rngHasil" style="overflow:auto;max-height:50vh;border:1px solid #ccc;border-radius:5px;"></div>
     </div>
   </div>
 </div>
@@ -233,12 +231,32 @@ let curTahun = new Date().getFullYear();
 let drivers = [];
 let logs = {};
 
+// ================== CORE ==================
 async function api(params) {
   const qs = new URLSearchParams(params).toString();
   const res = await fetch(API_URL + '?' + qs, { method: 'GET', redirect: 'follow' });
   return await res.json();
 }
 
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.innerText = msg; t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+
+function setBadge(cls, text) {
+  const b = document.getElementById('statusBadge');
+  b.className = 'status-badge ' + cls;
+  b.innerText = text;
+}
+function updateBadge() {
+  if (!navigator.onLine) { setBadge('offline', 'OFFLINE'); return; }
+  const p = getPending().length;
+  if (p > 0) setBadge('pending', 'PENDING ' + p);
+  else setBadge('online', 'ONLINE');
+}
+
+// ================== PENDING QUEUE ==================
 function getPending() { try { return JSON.parse(localStorage.getItem('pending') || '[]'); } catch (e) { return []; } }
 function setPending(arr) { localStorage.setItem('pending', JSON.stringify(arr)); updateBadge(); }
 
@@ -255,16 +273,15 @@ async function flushPending() {
   updateBadge();
 }
 
-function setBadge(cls, text) {
-  const b = document.getElementById('statusBadge');
-  b.className = 'status-badge ' + cls;
-  b.innerText = text;
-}
-function updateBadge() {
-  if (!navigator.onLine) { setBadge('offline', 'OFFLINE'); return; }
-  const p = getPending().length;
-  if (p > 0) setBadge('pending', 'PENDING ' + p);
-  else setBadge('online', 'ONLINE');
+// ================== DATA ==================
+function getShifts(key) {
+  const raw = logs[key];
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === 'object' && (raw.out || raw.in)) {
+    return [{ shift: 1, out: raw.out || '', in: raw.in || '' }];
+  }
+  return [];
 }
 
 async function refreshData(silent) {
@@ -292,178 +309,14 @@ function loadCache() {
   try { logs = JSON.parse(localStorage.getItem('cache_logs_' + curBulan + '_' + curTahun) || '{}'); } catch (e) {}
 }
 
-function autoFormatJam(inp) {
-  let v = inp.value.replace(/[^0-9:]/g, '');
-  // Hapus titik dua lama, ambil digit
-  let digits = v.replace(/:/g, '');
-  if (digits.length === 0) { inp.value = ''; return; }
-  if (digits.length <= 2) {
-    // Hanya jam, biarkan
-    if (digits.length === 2 && Number(digits) > 23) {
-      // Koreksi kalau > 23
-      inp.value = digits.substring(0, 1);
-    } else {
-      inp.value = digits;
-    }
-    return;
-  }
-  if (digits.length === 3) {
-    // 730 → 07:30
-    digits = '0' + digits;
-  }
-  if (digits.length >= 4) {
-    let j = digits.substring(0, 2);
-    let m = digits.substring(2, 4);
-    // Koreksi jam > 23
-    if (Number(j) > 23) { j = '23'; }
-    // Koreksi menit > 59
-    if (Number(m) > 59) { m = '59'; }
-    inp.value = j + ':' + m;
-  }
-}
-
-function validasiJam(val) {
-  if (!val) return true;
-  const m = val.match(/^([0-9]{1,2}):([0-9]{2})$/);
-  if (!m) return false;
-  const j = Number(m[1]);
-  const mn = Number(m[2]);
-  return j >= 0 && j <= 23 && mn >= 0 && mn <= 59;
-}
-// ============ PICKER JAM (24 JAM) ============
-let pickerTarget = null;
-let pickerHour = null;
-let pickerMin = null;
-
-function inisialisasiPicker() {
-  const hourGrid = document.getElementById("pickerHourGrid");
-  if (!hourGrid) return;
-  hourGrid.innerHTML = "";
-  for (let h = 0; h < 24; h++) {
-    const cell = document.createElement("div");
-    cell.className = "picker-cell";
-    cell.textContent = String(h).padStart(2, "0");
-    cell.dataset.value = h;
-    cell.onclick = function() { pickerHour = h; updatePickerPreview(); };
-    hourGrid.appendChild(cell);
-  }
-  const minGrid = document.getElementById("pickerMinGrid");
-  minGrid.innerHTML = "";
-  for (let m = 0; m < 60; m += 5) {
-    const cell = document.createElement("div");
-    cell.className = "picker-cell";
-    cell.textContent = String(m).padStart(2, "0");
-    cell.dataset.value = m;
-    cell.onclick = function() { pickerMin = m; updatePickerPreview(); };
-    minGrid.appendChild(cell);
-  }
-}
-
-function bukaPicker(inp) {
-  pickerTarget = inp;
-  const val = inp.value;
-  if (val && /^\d{1,2}:\d{2}$/.test(val)) {
-    const parts = val.split(":");
-    pickerHour = parseInt(parts[0], 10);
-    let m = parseInt(parts[1], 10);
-    m = Math.round(m / 5) * 5;
-    if (m >= 60) m = 55;
-    pickerMin = m;
-  } else {
-    pickerHour = null;
-    pickerMin = null;
-  }
-  const nama = inp.dataset.nama || "";
-  const tgl = inp.dataset.tgl || "";
-  const tipe = inp.dataset.tipe === "out" ? "BERANGKAT (OUT)" : "PULANG (IN)";
-  let tglStr = tgl;
-  try {
-    const tglObj = new Date(tgl + "T00:00:00");
-    const hari = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"][tglObj.getDay()];
-    const bulanArr = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
-    tglStr = hari + ", " + tglObj.getDate() + " " + bulanArr[tglObj.getMonth()] + " " + tglObj.getFullYear();
-  } catch(e) {}
-  document.getElementById("pickerTitle").textContent = "Pilih Jam - " + tipe;
-  document.getElementById("pickerInfo").innerHTML = "<b>Driver:</b> " + nama + "<br><b>Tanggal:</b> " + tglStr;
-  updatePickerPreview();
-  document.getElementById("pickerJam").classList.add("show");
-}
-
-function updatePickerPreview() {
-  document.querySelectorAll("#pickerHourGrid .picker-cell").forEach(function(c) {
-    c.classList.toggle("selected", Number(c.dataset.value) === pickerHour);
-  });
-  document.querySelectorAll("#pickerMinGrid .picker-cell").forEach(function(c) {
-    c.classList.toggle("selected", Number(c.dataset.value) === pickerMin);
-  });
-  const h = pickerHour !== null ? String(pickerHour).padStart(2, "0") : "--";
-  const m = pickerMin !== null ? String(pickerMin).padStart(2, "0") : "--";
-  document.getElementById("pickerPreview").textContent = h + ":" + m;
-}
-
-function pickerClear() {
-  if (!pickerTarget) return;
-  pickerTarget.value = "";
-  saveCell(pickerTarget);
-  tutupPicker();
-  toast("Jam dikosongkan");
-}
-
-function pickerSave() {
-  if (!pickerTarget) return;
-  if (pickerHour === null || pickerMin === null) {
-    toast("Pilih jam & menit dulu");
-    return;
-  }
-  pickerTarget.value = String(pickerHour).padStart(2, "0") + ":" + String(pickerMin).padStart(2, "0");
-  saveCell(pickerTarget);
-  tutupPicker();
-}
-
-function tutupPicker() {
-  document.getElementById("pickerJam").classList.remove("show");
-  pickerTarget = null;
-}
-
-async function saveCell(inp) {
-  const key = inp.dataset.nama + '|' + inp.dataset.tgl;
-  if (!logs[key]) logs[key] = { out: '', in: '' };
-  logs[key][inp.dataset.tipe] = inp.value;
-  localStorage.setItem('cache_logs_' + curBulan + '_' + curTahun, JSON.stringify(logs));
-
-  const params = { action: 'simpan', nama: inp.dataset.nama, tanggal: inp.dataset.tgl, tipe: inp.dataset.tipe, value: inp.value };
-
-  if (!navigator.onLine) {
-    const p = getPending(); p.push(params); setPending(p);
-    inp.classList.add('queued');
-    setTimeout(function() { inp.classList.remove('queued'); }, 800);
-    return;
-  }
-  try {
-    const r = await api(params);
-    if (r.ok) {
-      inp.classList.add('saved');
-      setTimeout(function() { inp.classList.remove('saved'); }, 600);
-    } else throw new Error(r.error);
-  } catch (e) {
-    const p = getPending(); p.push(params); setPending(p);
-    inp.classList.add('queued');
-    setTimeout(function() { inp.classList.remove('queued'); }, 800);
-  }
-}
-
-function toast(msg) {
-  const t = document.getElementById('toast');
-  t.innerText = msg; t.classList.add('show');
-  setTimeout(function() { t.classList.remove('show'); }, 2500);
-}
-
+// ================== RENDER ==================
 function driversUntukBulan(bulan, tahun) {
-  const tglAwal = new Date(tahun, bulan - 1, 1);
-  const tglAkhir = new Date(tahun, bulan, 0);
+  const tglAwalStr = tahun + '-' + String(bulan).padStart(2,'0') + '-01';
+  const lastDay = new Date(tahun, bulan, 0).getDate();
+  const tglAkhirStr = tahun + '-' + String(bulan).padStart(2,'0') + '-' + String(lastDay).padStart(2,'0');
   return drivers.filter(function(d) {
-    if (d.tglAktif) { const ta = new Date(d.tglAktif); if (ta > tglAkhir) return false; }
-    if (d.tglResign) { const tr = new Date(d.tglResign); if (tr < tglAwal) return false; }
+    if (d.tglAktif && d.tglAktif > tglAkhirStr) return false;
+    if (d.tglResign && d.tglResign < tglAwalStr) return false;
     return true;
   });
 }
@@ -492,815 +345,30 @@ function renderTabel() {
     for (let d = 1; d <= jmlHari; d++) {
       const tgl = curTahun + '-' + String(curBulan).padStart(2,'0') + '-' + String(d).padStart(2,'0');
       const key = drv.nama + '|' + tgl;
-      const log = logs[key] || { out: '', in: '' };
-      html += '<td class="cell"><input type="time" data-nama="' + drv.nama + '" data-tgl="' + tgl + '" data-tipe="out" value="' + (log.out || '') + '"></td>';
-      html += '<td class="cell"><input type="time" data-nama="' + drv.nama + '" data-tgl="' + tgl + '" data-tipe="in" value="' + (log.in || '') + '"></td>';
+      const shifts = getShifts(key);
+      
+      let outStr = shifts.map(function(s) { return s.out; }).filter(Boolean).join('<br>');
+      let inStr = shifts.map(function(s) { return s.in; }).filter(Boolean).join('<br>');
+      if (!outStr) outStr = '-';
+      if (!inStr) inStr = '-';
+
+      html += '<td class="cell" style="text-align:center; font-size:12px; font-weight:bold; color:#C00000; padding:4px;" onclick="bukaModalShift(\'' + drv.nama + '\', \'' + tgl + '\')">' + outStr + '</td>';
+      html += '<td class="cell" style="text-align:center; font-size:12px; font-weight:bold; color:#C00000; padding:4px;" onclick="bukaModalShift(\'' + drv.nama + '\', \'' + tgl + '\')">' + inStr + '</td>';
     }
     html += '</tr>';
   });
   html += '</tbody></table>';
   document.getElementById('tableWrap').innerHTML = html;
-
-    document.querySelectorAll('td.cell input').forEach(function(inp) {
-    inp.addEventListener('click', function(e) { e.preventDefault(); bukaPicker(inp); });
-  });
 }
 
 function geserBulan(delta) {
   curBulan += delta;
   if (curBulan > 12) { curBulan = 1; curTahun++; }
   if (curBulan < 1) { curBulan = 12; curTahun--; }
-inisialisasiPicker();
-  loadCache();
-  renderTabel();
-  refreshData(true);
+  loadCache(); renderTabel(); refreshData(true);
 }
 
-function bukaModal(id) {
-  document.getElementById(id).classList.add('show');
-  if (id === 'modalDriver') renderDriverModal();
-}
-function tutupModal(id) { document.getElementById(id).classList.remove('show'); }
-document.querySelectorAll('.modal-bg').forEach(function(m) {
-  m.addEventListener('click', function(e) { if (e.target === m) m.classList.remove('show'); });
-});
-
-function renderDriverModal() {
-  document.getElementById('newTgl').value = new Date().toISOString().split('T')[0];
-  const tbody = document.getElementById('tblDriver');
-  tbody.innerHTML = '';
-  drivers.forEach(function(d) {
-    const tr = document.createElement('tr');
-    let badge = '<span class="badge aktif">AKTIF</span>';
-    if (d.tglResign) badge = '<span class="badge resign">RESIGN</span>';
-    else if (d.tglAktif && new Date(d.tglAktif) > new Date()) badge = '<span class="badge belum">BELUM</span>';
-    let btnAksi = d.tglResign
-      ? '<button class="btn-sm btn-aktif" onclick="aktifkanDriver(' + d.id + ')">Aktif</button>'
-      : '<button class="btn-sm btn-del" onclick="resignDriver(' + d.id + ')">Resign</button>';
-    tr.innerHTML =
-      '<td><input type="text" value="' + d.nama + '" id="nm-' + d.id + '"></td>' +
-      '<td><input type="date" value="' + (d.tglAktif || '') + '" id="ta-' + d.id + '"></td>' +
-      '<td><input type="date" value="' + (d.tglResign || '') + '" id="tr-' + d.id + '"></td>' +
-      '<td>' + badge + '</td>' +
-      '<td><button class="btn-sm btn-save" onclick="simpanDriver(' + d.id + ')">Simpan</button>' + btnAksi + '</td>';
-    tbody.appendChild(tr);
-  });
-}
-
-async function tambahDriver() {
-  const nama = document.getElementById('newNama').value.trim().toUpperCase();
-  const tgl = document.getElementById('newTgl').value;
-  if (!nama) return toast('Isi nama dulu');
-  if (!navigator.onLine) return toast('Tambah driver butuh internet');
-  try {
-    const r = await api({ action: 'tambah_driver', nama: nama, tglAktif: tgl });
-    if (r.ok) {
-      document.getElementById('newNama').value = '';
-      await refreshData(true);
-      renderDriverModal();
-      toast('Driver ditambahkan');
-    } else toast(r.error);
-  } catch (e) { toast('Gagal: ' + e.message); }
-}
-
-async function simpanDriver(id) {
-  if (!navigator.onLine) return toast('Butuh internet');
-  const nama = document.getElementById('nm-' + id).value.trim().toUpperCase();
-  const tglAktif = document.getElementById('ta-' + id).value;
-  const tglResign = document.getElementById('tr-' + id).value;
-  try {
-    const r = await api({ action: 'update_driver', id: id, nama: nama, tglAktif: tglAktif, tglResign: tglResign });
-    if (r.ok) { await refreshData(true); renderDriverModal(); toast('Tersimpan'); }
-    else toast(r.error);
-  } catch (e) { toast('Gagal: ' + e.message); }
-}
-
-async function resignDriver(id) {
-  const d = drivers.find(function(x) { return x.id === id; });
-  const tgl = prompt('Tanggal resign ' + d.nama + ' (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
-  if (!tgl) return;
-  if (!navigator.onLine) return toast('Butuh internet');
-  try {
-    const r = await api({ action: 'update_driver', id: id, tglResign: tgl });
-    if (r.ok) { await refreshData(true); renderDriverModal(); toast('Driver resign'); }
-    else toast(r.error);
-  } catch (e) { toast('Gagal: ' + e.message); }
-}
-
-async function aktifkanDriver(id) {
-  if (!navigator.onLine) return toast('Butuh internet');
-  try {
-    const r = await api({ action: 'update_driver', id: id, tglResign: '' });
-    if (r.ok) { await refreshData(true); renderDriverModal(); toast('Driver aktif kembali'); }
-    else toast(r.error);
-  } catch (e) { toast('Gagal: ' + e.message); }
-}
-
-window.addEventListener('online', function() { updateBadge(); flushPending(); refreshData(true); });
-window.addEventListener('offline', updateBadge);
-setInterval(function() { if (navigator.onLine && getPending().length > 0) flushPending(); }, 30000);
-setInterval(function() { if (navigator.onLine) refreshData(true); }, 300000);
-
-
-
-function exportXLSX() {
-  if (typeof XLSX === 'undefined') { toast('Library XLSX belum siap, coba refresh'); return; }
-  const jmlHari = new Date(curTahun, curBulan, 0).getDate();
-  const daftarDriver = driversUntukBulan(curBulan, curTahun);
-  const blnShort = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
-
-  const aoa = [];
-  const totalCol = 2 + jmlHari * 2;
-
-  // Baris 1: judul
-  const judul = ['KINERJA DRIVER BULAN ' + NAMA_BULAN[curBulan] + ' ' + curTahun];
-  for (let i = 1; i < totalCol; i++) judul.push('');
-  aoa.push(judul);
-
-  // Baris 2: kosong
-  const kosong = [];
-  for (let i = 0; i < totalCol; i++) kosong.push('');
-  aoa.push(kosong);
-
-  // Baris 3: header hari
-  const headHari = ['NO', 'NAMA'];
-  for (let d = 1; d <= jmlHari; d++) {
-    const tgl = new Date(curTahun, curBulan - 1, d);
-    const dow = (tgl.getDay() + 6) % 7;
-    const tglStr = String(d).padStart(2,'0') + '-' + blnShort[curBulan-1] + '-' + String(curTahun).slice(-2);
-    headHari.push(NAMA_HARI[dow] + ' ' + tglStr, '');
-  }
-  aoa.push(headHari);
-
-  // Baris 4: OUT/IN
-  const headOI = ['', ''];
-  for (let d = 1; d <= jmlHari; d++) headOI.push('OUT', 'IN');
-  aoa.push(headOI);
-
-  // Baris data
-  daftarDriver.forEach(function(drv, idx) {
-    const row = [idx + 1, drv.nama];
-    for (let d = 1; d <= jmlHari; d++) {
-      const tgl = curTahun + '-' + String(curBulan).padStart(2,'0') + '-' + String(d).padStart(2,'0');
-      const key = drv.nama + '|' + tgl;
-      const log = logs[key] || { out: '', in: '' };
-      row.push(log.out || '', log.in || '');
-    }
-    aoa.push(row);
-  });
-
-  // Buat workbook
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
-
-  // Merge judul & header NO/NAMA
-  ws['!merges'] = [
-    {s: {r: 0, c: 0}, e: {r: 0, c: totalCol - 1}},
-    {s: {r: 2, c: 0}, e: {r: 3, c: 0}},
-    {s: {r: 2, c: 1}, e: {r: 3, c: 1}}
-  ];
-  for (let d = 0; d < jmlHari; d++) {
-    const col = 2 + d * 2;
-    ws['!merges'].push({s: {r: 2, c: col}, e: {r: 2, c: col + 1}});
-  }
-
-  // Lebar kolom
-  const wscols = [{wch: 5}, {wch: 15}];
-  for (let i = 0; i < jmlHari * 2; i++) wscols.push({wch: 7});
-  ws['!cols'] = wscols;
-
-  XLSX.utils.book_append_sheet(wb, ws, 'Absensi');
-  const fname = 'AbsensiDriver_' + NAMA_BULAN[curBulan] + '_' + curTahun + '.xlsx';
-  XLSX.writeFile(wb, fname);
-  toast('File Excel siap: ' + fname);
-}
-function bukaModalExport() {
-  document.getElementById('expBulan').value = curBulan;
-  document.getElementById('expTahun').value = curTahun;
-  document.getElementById('expPakaiRange').checked = false;
-  document.getElementById('rangeFields').style.display = 'none';
-  const tgl1 = curTahun + '-' + String(curBulan).padStart(2,'0') + '-01';
-  const lastDay = new Date(curTahun, curBulan, 0).getDate();
-  const tgl2 = curTahun + '-' + String(curBulan).padStart(2,'0') + '-' + String(lastDay).padStart(2,'0');
-  document.getElementById('expDari').value = tgl1;
-  document.getElementById('expSampai').value = tgl2;
-  document.getElementById('modalExport').classList.add('show');
-}
-
-function toggleRange() {
-  const c = document.getElementById('expPakaiRange').checked;
-  document.getElementById('rangeFields').style.display = c ? 'block' : 'none';
-}
-
-async function exportXLSXRange() {
-  if (typeof XLSX === 'undefined') { toast('Library XLSX belum siap, refresh halaman'); return; }
-  const bulan = Number(document.getElementById('expBulan').value);
-  const tahun = Number(document.getElementById('expTahun').value);
-  const pakaiRange = document.getElementById('expPakaiRange').checked;
-  const dariStr = document.getElementById('expDari').value;
-  const sampaiStr = document.getElementById('expSampai').value;
-
-  let startDate, endDate;
-  if (pakaiRange) {
-    if (!dariStr || !sampaiStr) { toast('Isi tanggal dari & sampai'); return; }
-    startDate = new Date(dariStr + 'T00:00:00');
-    endDate = new Date(sampaiStr + 'T00:00:00');
-    if (startDate > endDate) { toast('Tanggal dari harus <= sampai'); return; }
-  } else {
-    if (!bulan || !tahun) { toast('Bulan/tahun tidak valid'); return; }
-    startDate = new Date(tahun, bulan - 1, 1);
-    endDate = new Date(tahun, bulan, 0);
-  }
-
-  const oneDay = 24 * 60 * 60 * 1000;
-  const totalHari = Math.round((endDate - startDate) / oneDay) + 1;
-  if (totalHari > 400) { toast('Range maksimal 400 hari (supaya tidak berat)'); return; }
-
-  toast('Menyiapkan data (' + totalHari + ' hari)...');
-
-  const dataAll = {};
-  const bulanSet = [];
-  let cur = new Date(startDate);
-  while (cur <= endDate) {
-    const key = cur.getFullYear() + '-' + (cur.getMonth() + 1);
-    if (bulanSet.indexOf(key) === -1) bulanSet.push(key);
-    cur.setDate(cur.getDate() + 1);
-  }
-
-  try {
-    for (let i = 0; i < bulanSet.length; i++) {
-      const parts = bulanSet[i].split('-');
-      const y = Number(parts[0]);
-      const m = Number(parts[1]);
-      const r = await api({ action: 'data', bulan: m, tahun: y });
-      if (r.ok && r.data) {
-        for (const k in r.data) { if (r.data.hasOwnProperty(k)) dataAll[k] = r.data[k]; }
-      }
-    }
-  } catch (e) { toast('Gagal ambil data: ' + e.message); return; }
-
-  let driversAll = drivers;
-  try {
-    const rd = await api({ action: 'drivers' });
-    if (rd.ok) driversAll = rd.drivers || [];
-  } catch(e) {}
-
-  const endStr = endDate.getFullYear() + '-' + String(endDate.getMonth()+1).padStart(2,'0') + '-' + String(endDate.getDate()).padStart(2,'0');
-  const startStr = startDate.getFullYear() + '-' + String(startDate.getMonth()+1).padStart(2,'0') + '-' + String(startDate.getDate()).padStart(2,'0');
-  const daftarDriver = driversAll.filter(function(d) {
-    if (d.tglAktif && d.tglAktif > endStr) return false;
-    if (d.tglResign && d.tglResign < startStr) return false;
-    return true;
-  });
-
-  const dateArr = [];
-  let cur2 = new Date(startDate);
-  while (cur2 <= endDate) {
-    dateArr.push(new Date(cur2));
-    cur2.setDate(cur2.getDate() + 1);
-  }
-
-  const totalCol = 2 + dateArr.length * 2;
-  const blnShort = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
-  const namaBulanArr = ['','JANUARI','FEBRUARI','MARET','APRIL','MEI','JUNI','JULI','AGUSTUS','SEPTEMBER','OKTOBER','NOVEMBER','DESEMBER'];
-
-  const aoa = [];
-  let judulStr = 'KINERJA DRIVER';
-  if (pakaiRange) {
-    judulStr += ' PERIODE ' + String(startDate.getDate()).padStart(2,'0') + ' ' + namaBulanArr[startDate.getMonth()+1] + ' ' + startDate.getFullYear() + ' s/d ' + String(endDate.getDate()).padStart(2,'0') + ' ' + namaBulanArr[endDate.getMonth()+1] + ' ' + endDate.getFullYear();
-  } else {
-    judulStr += ' BULAN ' + namaBulanArr[bulan] + ' ' + tahun;
-  }
-  const judul = [judulStr];
-  for (let i = 1; i < totalCol; i++) judul.push('');
-  aoa.push(judul);
-
-  const kosong = [];
-  for (let i = 0; i < totalCol; i++) kosong.push('');
-  aoa.push(kosong);
-
-  const headHari = ['NO', 'NAMA'];
-  for (let h = 0; h < dateArr.length; h++) {
-    const tgl = dateArr[h];
-    const dow = (tgl.getDay() + 6) % 7;
-    const tglStr = String(tgl.getDate()).padStart(2,'0') + '-' + blnShort[tgl.getMonth()] + '-' + String(tgl.getFullYear()).slice(-2);
-    headHari.push(NAMA_HARI[dow] + ' ' + tglStr, '');
-  }
-  aoa.push(headHari);
-
-  const headOI = ['', ''];
-  for (let h = 0; h < dateArr.length; h++) headOI.push('OUT', 'IN');
-  aoa.push(headOI);
-
-  daftarDriver.forEach(function(drv, idx) {
-    const row = [idx + 1, drv.nama];
-    for (let h = 0; h < dateArr.length; h++) {
-      const tgl = dateArr[h];
-      const tglStr = tgl.getFullYear() + '-' + String(tgl.getMonth() + 1).padStart(2,'0') + '-' + String(tgl.getDate()).padStart(2,'0');
-      const key = drv.nama + '|' + tglStr;
-      const log = dataAll[key] || { out: '', in: '' };
-      row.push(log.out || '', log.in || '');
-    }
-    aoa.push(row);
-  });
-
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws['!merges'] = [
-    {s: {r: 0, c: 0}, e: {r: 0, c: totalCol - 1}},
-    {s: {r: 2, c: 0}, e: {r: 3, c: 0}},
-    {s: {r: 2, c: 1}, e: {r: 3, c: 1}}
-  ];
-  for (let h = 0; h < dateArr.length; h++) {
-    const col = 2 + h * 2;
-    ws['!merges'].push({s: {r: 2, c: col}, e: {r: 2, c: col + 1}});
-  }
-  const wscols = [{wch: 5}, {wch: 15}];
-  for (let i = 0; i < dateArr.length * 2; i++) wscols.push({wch: 7});
-  ws['!cols'] = wscols;
-
-  XLSX.utils.book_append_sheet(wb, ws, 'Absensi');
-
-  let fname = 'AbsensiDriver';
-  if (pakaiRange) {
-    fname += '_' + startDate.getFullYear() + String(startDate.getMonth()+1).padStart(2,'0') + String(startDate.getDate()).padStart(2,'0');
-    fname += '-' + endDate.getFullYear() + String(endDate.getMonth()+1).padStart(2,'0') + String(endDate.getDate()).padStart(2,'0');
-  } else {
-    fname += '_' + namaBulanArr[bulan] + '_' + tahun;
-  }
-  fname += '.xlsx';
-  XLSX.writeFile(wb, fname);
-  tutupModal('modalExport');
-  toast('File Excel siap: ' + fname);
-}
-function hitungMenit(outStr, inStr) {
-  if (!outStr || !inStr) return null;
-  const p1 = String(outStr).split(':');
-  const p2 = String(inStr).split(':');
-  if (p1.length < 2 || p2.length < 2) return null;
-  const oh = Number(p1[0]), om = Number(p1[1]);
-  const ih = Number(p2[0]), im = Number(p2[1]);
-  if (isNaN(oh) || isNaN(om) || isNaN(ih) || isNaN(im)) return null;
-  let m = (ih * 60 + im) - (oh * 60 + om);
-  if (m < 0) m += 24 * 60;
-  return m;
-}
-
-function formatJamKerja(menit) {
-  if (menit === null || menit === undefined) return '';
-  const j = Math.floor(menit / 60);
-  const m = menit % 60;
-  return j + ':' + String(m).padStart(2, '0');
-}
-
-function printHalaman() {
-  document.querySelectorAll('td.cell input').forEach(function(inp) {
-    if (inp.nextElementSibling && inp.nextElementSibling.classList && inp.nextElementSibling.classList.contains('print-val')) return;
-    const span = document.createElement('span');
-    span.className = 'print-val';
-    span.textContent = inp.value ? inp.value : '--:--';
-    inp.parentNode.insertBefore(span, inp.nextSibling);
-  });
-  setTimeout(function() { window.print(); }, 100);
-}
-
-window.addEventListener('afterprint', function() {
-  document.querySelectorAll('.print-val').forEach(function(sp) { sp.remove(); });
-});
-
-function printRangeDariModal() {
-  const bulan = Number(document.getElementById('expBulan').value);
-  const tahun = Number(document.getElementById('expTahun').value);
-  const pakaiRange = document.getElementById('expPakaiRange').checked;
-  const dariStr = document.getElementById('expDari').value;
-  const sampaiStr = document.getElementById('expSampai').value;
-  if (!pakaiRange) { tutupModal('modalExport'); setTimeout(function(){ printHalaman(); }, 300); return; }
-  if (!dariStr || !sampaiStr) { toast('Isi tanggal dari & sampai'); return; }
-  cetakKeIframe(bulan, tahun, dariStr, sampaiStr);
-}
-
-async function cetakKeIframe(bulan, tahun, dariStr, sampaiStr) {
-  toast('Menyiapkan print...');
-  const d1 = new Date(dariStr + 'T00:00:00');
-  const d2 = new Date(sampaiStr + 'T00:00:00');
-  if (d1 > d2) { toast('Tanggal dari > sampai'); return; }
-
-  const bulanSet = [];
-  let cur = new Date(d1);
-  while (cur <= d2) {
-    const key = cur.getFullYear() + '-' + (cur.getMonth() + 1);
-    if (bulanSet.indexOf(key) === -1) bulanSet.push(key);
-    cur.setDate(cur.getDate() + 1);
-  }
-  const dataAll = {};
-  try {
-    for (let i = 0; i < bulanSet.length; i++) {
-      const parts = bulanSet[i].split('-');
-      const r = await api({ action: 'data', bulan: Number(parts[1]), tahun: Number(parts[0]) });
-      if (r.ok && r.data) for (const k in r.data) if (r.data.hasOwnProperty(k)) dataAll[k] = r.data[k];
-    }
-  } catch(e) { toast('Gagal ambil data'); return; }
-
-  let driversAll = drivers;
-  try {
-    const rd = await api({ action: 'drivers' });
-    if (rd.ok) driversAll = rd.drivers || [];
-  } catch(e) {}
-
-  const d2Str = d2.getFullYear() + '-' + String(d2.getMonth()+1).padStart(2,'0') + '-' + String(d2.getDate()).padStart(2,'0');
-  const d1Str = d1.getFullYear() + '-' + String(d1.getMonth()+1).padStart(2,'0') + '-' + String(d1.getDate()).padStart(2,'0');
-  const daftarDriver = driversAll.filter(function(d) {
-    if (d.tglAktif && d.tglAktif > d2Str) return false;
-    if (d.tglResign && d.tglResign < d1Str) return false;
-    return true;
-  });
-
-  const dateArr = [];
-  let cur2 = new Date(d1);
-  while (cur2 <= d2) { dateArr.push(new Date(cur2)); cur2.setDate(cur2.getDate() + 1); }
-
-  const blnShort = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
-  const namaBulanArr = ['','JANUARI','FEBRUARI','MARET','APRIL','MEI','JUNI','JULI','AGUSTUS','SEPTEMBER','OKTOBER','NOVEMBER','DESEMBER'];
-
-  let html = '<html><head><meta charset="UTF-8"><title>Absensi Driver</title><style>';
-  html += '@page { size: A4 landscape; margin: 0.5cm; }';
-  html += 'body { font-family: Arial; font-size: 9px; margin: 4px; }';
-  html += 'h2 { text-align: center; font-size: 13px; margin: 4px 0; background: #FFC000; padding: 6px; }';
-  html += 'table { border-collapse: collapse; width: 100%; }';
-  html += 'th, td { border: 1px solid #333; padding: 1px 2px; text-align: center; font-size: 8px; }';
-  html += 'th { background: #FFC000; }';
-  html += 'th.monday { background: #FF0000; color: white; }';
-  html += 'th.out { background: #92D050; }';
-  html += 'th.in { background: #C6E0B4; }';
-  html += 'td.name { text-align: left; font-weight: bold; padding-left: 4px; background: #FFF2CC; }';
-  html += 'td.no { background: #FFF2CC; }';
-  html += '</style></head><body>';
-  html += '<h2>KINERJA DRIVER PERIODE ' + String(d1.getDate()).padStart(2,'0') + ' ' + namaBulanArr[d1.getMonth()+1] + ' ' + d1.getFullYear() + ' s/d ' + String(d2.getDate()).padStart(2,'0') + ' ' + namaBulanArr[d2.getMonth()+1] + ' ' + d2.getFullYear() + '</h2>';
-  html += '<table><thead><tr><th rowspan="2">NO</th><th rowspan="2">NAMA</th>';
-  for (let h = 0; h < dateArr.length; h++) {
-    const tgl = dateArr[h];
-    const dow = (tgl.getDay() + 6) % 7;
-    const cls = dow === 0 ? ' class="monday"' : '';
-    html += '<th colspan="2"' + cls + '>' + NAMA_HARI[dow] + ' ' + String(tgl.getDate()).padStart(2,'0') + '-' + blnShort[tgl.getMonth()] + '-' + String(tgl.getFullYear()).slice(-2) + '</th>';
-  }
-  html += '</tr><tr>';
-  for (let h = 0; h < dateArr.length; h++) html += '<th class="out">OUT</th><th class="in">IN</th>';
-  html += '</tr></thead><tbody>';
-  daftarDriver.forEach(function(drv, idx) {
-    html += '<tr><td class="no">' + (idx + 1) + '</td><td class="name">' + drv.nama + '</td>';
-    for (let h = 0; h < dateArr.length; h++) {
-      const tgl = dateArr[h];
-      const tglStr = tgl.getFullYear() + '-' + String(tgl.getMonth() + 1).padStart(2,'0') + '-' + String(tgl.getDate()).padStart(2,'0');
-      const log = dataAll[drv.nama + '|' + tglStr] || { out: '', in: '' };
-      html += '<td>' + (log.out || '--:--') + '</td><td>' + (log.in || '--:--') + '</td>';
-    }
-    html += '</tr>';
-  });
-  html += '</tbody></table></body></html>';
-
-  const iframe = document.createElement('iframe');
-  iframe.style.position = 'fixed'; iframe.style.right = '0'; iframe.style.bottom = '0';
-  iframe.style.width = '0'; iframe.style.height = '0'; iframe.style.border = '0';
-  document.body.appendChild(iframe);
-  iframe.contentDocument.open();
-  iframe.contentDocument.write(html);
-  iframe.contentDocument.close();
-  iframe.onload = function() {
-    iframe.contentWindow.focus();
-    iframe.contentWindow.print();
-    setTimeout(function() { document.body.removeChild(iframe); }, 2000);
-  };
-  tutupModal('modalExport');
-}
-
-function bukaModalRingkasan() {
-  document.getElementById('rngBulan').value = curBulan;
-  document.getElementById('rngTahun').value = curTahun;
-  document.getElementById('rngPakaiRange').checked = false;
-  document.getElementById('rngRangeFields').style.display = 'none';
-  const tgl1 = curTahun + '-' + String(curBulan).padStart(2,'0') + '-01';
-  const lastDay = new Date(curTahun, curBulan, 0).getDate();
-  const tgl2 = curTahun + '-' + String(curBulan).padStart(2,'0') + '-' + String(lastDay).padStart(2,'0');
-  document.getElementById('rngDari').value = tgl1;
-  document.getElementById('rngSampai').value = tgl2;
-  document.getElementById('modalRingkasan').classList.add('show');
-  renderRingkasan();
-}
-
-let lastRingkasan = null;
-
-async function renderRingkasan() {
-  const bulan = Number(document.getElementById('rngBulan').value);
-  const tahun = Number(document.getElementById('rngTahun').value);
-  const pakaiRange = document.getElementById('rngPakaiRange').checked;
-  const dariStr = document.getElementById('rngDari').value;
-  const sampaiStr = document.getElementById('rngSampai').value;
-
-  let startDate, endDate;
-  if (pakaiRange) {
-    if (!dariStr || !sampaiStr) { toast('Isi tanggal dari & sampai'); return; }
-    startDate = new Date(dariStr + 'T00:00:00');
-    endDate = new Date(sampaiStr + 'T00:00:00');
-    if (startDate > endDate) { toast('Tanggal dari > sampai'); return; }
-  } else {
-    startDate = new Date(tahun, bulan - 1, 1);
-    endDate = new Date(tahun, bulan, 0);
-  }
-
-  toast('Menghitung ringkasan...');
-  const bulanSet = [];
-  let cur = new Date(startDate);
-  while (cur <= endDate) {
-    const key = cur.getFullYear() + '-' + (cur.getMonth() + 1);
-    if (bulanSet.indexOf(key) === -1) bulanSet.push(key);
-    cur.setDate(cur.getDate() + 1);
-  }
-  const dataAll = {};
-  try {
-    for (let i = 0; i < bulanSet.length; i++) {
-      const parts = bulanSet[i].split('-');
-      const r = await api({ action: 'data', bulan: Number(parts[1]), tahun: Number(parts[0]) });
-      if (r.ok && r.data) for (const k in r.data) if (r.data.hasOwnProperty(k)) dataAll[k] = r.data[k];
-    }
-  } catch(e) { toast('Gagal ambil data'); return; }
-
-  let driversAll = drivers;
-  try {
-    const rd = await api({ action: 'drivers' });
-    if (rd.ok) driversAll = rd.drivers || [];
-  } catch(e) {}
-
-  const endStr2 = endDate.getFullYear() + '-' + String(endDate.getMonth()+1).padStart(2,'0') + '-' + String(endDate.getDate()).padStart(2,'0');
-  const startStr2 = startDate.getFullYear() + '-' + String(startDate.getMonth()+1).padStart(2,'0') + '-' + String(startDate.getDate()).padStart(2,'0');
-  const daftarDriver = driversAll.filter(function(d) {
-    if (d.tglAktif && d.tglAktif > endStr2) return false;
-    if (d.tglResign && d.tglResign < startStr2) return false;
-    return true;
-  });
-
-  const dateArr = [];
-  let cur2 = new Date(startDate);
-  while (cur2 <= endDate) { dateArr.push(new Date(cur2)); cur2.setDate(cur2.getDate() + 1); }
-
-  let grandTotalMenit = 0;
-  const hasil = [];
-
-  const bulanList = [];
-  dateArr.forEach(function(tgl) {
-    const key = tgl.getFullYear() + '-' + tgl.getMonth();
-    const last = bulanList[bulanList.length - 1];
-    if (!last || last.key !== key) {
-      bulanList.push({ key: key, nama: NAMA_BULAN[tgl.getMonth()+1] + ' ' + tgl.getFullYear(), jumlah: 1 });
-    } else { last.jumlah++; }
-  });
-  const multiBulan = bulanList.length > 1;
-
-  let html = '<table style="border-collapse:collapse;width:100%;font-size:10px;"><thead>';
-  if (multiBulan) {
-    html += '<tr>';
-    html += '<th rowspan="2" style="background:#9333ea;color:white;padding:3px;border:1px solid #555;">NO</th>';
-    html += '<th rowspan="2" style="background:#9333ea;color:white;padding:3px;border:1px solid #555;text-align:left;">NAMA</th>';
-    bulanList.forEach(function(b) {
-      html += '<th colspan="' + b.jumlah + '" style="background:#6b21a8;color:white;padding:3px;border:1px solid #555;font-size:10px;">' + b.nama + '</th>';
-    });
-    html += '<th rowspan="2" style="background:#28A745;color:white;padding:3px;border:1px solid #555;">TOTAL</th>';
-    html += '</tr><tr>';
-  } else {
-    html += '<tr>';
-    html += '<th style="background:#9333ea;color:white;padding:3px;border:1px solid #555;">NO</th>';
-    html += '<th style="background:#9333ea;color:white;padding:3px;border:1px solid #555;text-align:left;">NAMA</th>';
-  }
-  for (let h = 0; h < dateArr.length; h++) {
-    const tgl = dateArr[h];
-    const cls = tgl.getDay() === 1 ? 'background:#dc3545;color:white;' : 'background:#c4b5fd;';
-    html += '<th style="' + cls + 'padding:2px;border:1px solid #555;font-size:9px;">' + tgl.getDate() + '</th>';
-  }
-  if (!multiBulan) {
-    html += '<th style="background:#28A745;color:white;padding:3px;border:1px solid #555;">TOTAL</th>';
-  }
-  html += '</tr></thead><tbody>';
-
-  daftarDriver.forEach(function(drv, idx) {
-    const rowData = { nama: drv.nama, hari: [], total: 0 };
-    let totalMenit = 0;
-    html += '<tr>';
-    html += '<td style="text-align:center;padding:2px;border:1px solid #ccc;background:#f3f4f6;">' + (idx + 1) + '</td>';
-    html += '<td style="padding:2px 6px;border:1px solid #ccc;font-weight:bold;background:#f3f4f6;">' + drv.nama + '</td>';
-    for (let h = 0; h < dateArr.length; h++) {
-      const tgl = dateArr[h];
-      const tglStr = tgl.getFullYear() + '-' + String(tgl.getMonth() + 1).padStart(2,'0') + '-' + String(tgl.getDate()).padStart(2,'0');
-      const log = dataAll[drv.nama + '|' + tglStr] || null;
-      const menit = log ? hitungMenit(log.out, log.in) : null;
-      if (menit !== null) totalMenit += menit;
-      rowData.hari.push(menit);
-      const txt = menit !== null ? formatJamKerja(menit) : (log && (log.out || log.in) ? '?' : '');
-      const warna = menit !== null ? '' : (log && (log.out || log.in) ? 'background:#fee2e2;' : 'background:#f9fafb;');
-      html += '<td style="text-align:center;padding:2px;border:1px solid #eee;font-size:10px;' + warna + '">' + txt + '</td>';
-    }
-    rowData.total = totalMenit;
-    grandTotalMenit += totalMenit;
-    html += '<td style="text-align:center;padding:2px;border:1px solid #ccc;font-weight:bold;background:#d1fae5;">' + formatJamKerja(totalMenit) + '</td>';
-    html += '</tr>';
-    hasil.push(rowData);
-  });
-
-  html += '</tbody><tfoot><tr>';
-  html += '<td colspan="' + (2 + dateArr.length) + '" style="text-align:right;padding:4px;border:1px solid #555;background:#9333ea;color:white;font-weight:bold;">GRAND TOTAL</td>';
-  html += '<td style="text-align:center;padding:4px;border:1px solid #555;background:#9333ea;color:white;font-weight:bold;">' + formatJamKerja(grandTotalMenit) + '</td>';
-  html += '</tr></tfoot></table>';
-
-  document.getElementById('rngHasil').innerHTML = html;
-
-  lastRingkasan = {
-    periode: pakaiRange ? (dariStr + ' s/d ' + sampaiStr) : ('Bulan ' + bulan + '/' + tahun),
-    drivers: hasil,
-    dates: dateArr,
-    grand: grandTotalMenit
-  };
-  toast('Ringkasan siap');
-}
-
-function exportRingkasanXLSX() {
-  if (!lastRingkasan) { toast('Tampilkan dulu'); return; }
-  if (typeof XLSX === 'undefined') { toast('Library XLSX belum siap'); return; }
-  const blnShort = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
-  const aoa = [];
-  aoa.push(['RINGKASAN KINERJA DRIVER']);
-  aoa.push(['Periode: ' + lastRingkasan.periode]);
-  aoa.push([]);
-
-  const bulanListX = [];
-  lastRingkasan.dates.forEach(function(tgl) {
-    const key = tgl.getFullYear() + '-' + tgl.getMonth();
-    const last = bulanListX[bulanListX.length - 1];
-    if (!last || last.key !== key) {
-      bulanListX.push({ key: key, nama: NAMA_BULAN[tgl.getMonth()+1] + ' ' + tgl.getFullYear(), jumlah: 1 });
-    } else { last.jumlah++; }
-  });
-  const multiBulanX = bulanListX.length > 1;
-  const totalColsX = 2 + lastRingkasan.dates.length + 1;
-  const mergesX = [];
-  mergesX.push({s: {r: 0, c: 0}, e: {r: 0, c: totalColsX - 1}});
-
-  if (multiBulanX) {
-    const headX1 = ['NO', 'NAMA'];
-    const headX2 = ['', ''];
-    let colIdx = 2;
-    bulanListX.forEach(function(b) {
-      headX1.push(b.nama);
-      mergesX.push({s: {r: 3, c: colIdx}, e: {r: 3, c: colIdx + b.jumlah - 1}});
-      for (let i = 1; i < b.jumlah; i++) headX1.push('');
-      colIdx += b.jumlah;
-    });
-    headX1.push('TOTAL');
-    mergesX.push({s: {r: 3, c: 0}, e: {r: 4, c: 0}});
-    mergesX.push({s: {r: 3, c: 1}, e: {r: 4, c: 1}});
-    mergesX.push({s: {r: 3, c: totalColsX - 1}, e: {r: 4, c: totalColsX - 1}});
-    lastRingkasan.dates.forEach(function(tgl) {
-      headX2.push(String(tgl.getDate()).padStart(2,'0'));
-    });
-    headX2.push('');
-    aoa.push(headX1);
-    aoa.push(headX2);
-  } else {
-    const headX1 = ['NO', 'NAMA'];
-    lastRingkasan.dates.forEach(function(tgl) {
-      headX1.push(String(tgl.getDate()).padStart(2,'0') + '-' + blnShort[tgl.getMonth()]);
-    });
-    headX1.push('TOTAL');
-    aoa.push(headX1);
-  }
-
-  lastRingkasan.drivers.forEach(function(d, idx) {
-    const row = [idx + 1, d.nama];
-    d.hari.forEach(function(m) { row.push(m !== null ? formatJamKerja(m) : ''); });
-    row.push(formatJamKerja(d.total));
-    aoa.push(row);
-  });
-  const foot = ['', 'GRAND TOTAL'];
-  for (let i = 0; i < lastRingkasan.dates.length; i++) foot.push('');
-  foot.push(formatJamKerja(lastRingkasan.grand));
-  aoa.push(foot);
-
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws['!merges'] = mergesX;
-  const wscols = [{wch: 5}, {wch: 15}];
-  for (let i = 0; i < lastRingkasan.dates.length; i++) wscols.push({wch: 8});
-  wscols.push({wch: 10});
-  ws['!cols'] = wscols;
-  XLSX.utils.book_append_sheet(wb, ws, 'Ringkasan');
-  XLSX.writeFile(wb, 'RingkasanDriver_' + lastRingkasan.periode.replace(/[^0-9A-Za-z]/g, '_') + '.xlsx');
-  toast('File ringkasan di-download');
-}
-async function uploadMatrix() {
-  if (!navigator.onLine) return toast('Butuh internet');
-  if (!confirm('Tarik data dari sheet Matrix (Google Sheets) ke HTML?' + '\n\n' + 'Sheet Data akan di-update sesuai isi Matrix.')) return;
-  toast('Mengambil data dari Matrix...');
-  try {
-    const r = await api({ action: 'sync_dari_matrix' });
-    if (r.ok) {
-      toast('OK: ' + r.msg + ' | +' + r.added + ' baru, ' + r.updated + ' update, ' + (r.cleared || 0) + ' dikosongkan');
-      await refreshData(true);
-    } else {
-      toast('Gagal: ' + r.error);
-    }
-  } catch (e) { toast('Gagal: ' + e.message); }
-}
-
-async function bukaModalAutoBackup() {
-  document.getElementById('modalAutoBackup').classList.add('show');
-  document.getElementById('abStatus').innerHTML = 'Memuat status...';
-  try {
-    const r = await api({ action: 'status_autobackup' });
-    if (r.ok) {
-      document.getElementById('abEnabled').checked = r.enabled;
-      document.getElementById('abMatrix').checked = r.matrixEnabled || false;
-      if (r.jam) document.getElementById('abJam').value = r.jam;
-      if (r.menit) document.getElementById('abMenit').value = r.menit;
-      if (r.folder) document.getElementById('abFolder').value = r.folder;
-      let statusHtml = '<b>Status:</b> ' + (r.enabled ? '✅ Aktif' : '❌ Nonaktif');
-      if (r.lastTime) {
-        const tgl = new Date(r.lastTime);
-        statusHtml += '<br><b>Backup terakhir:</b> ' + tgl.toLocaleString('id-ID');
-        statusHtml += '<br><b>Hasil:</b> ' + (r.lastStatus || '-');
-        if (r.lastFile) statusHtml += '<br><b>File:</b> ' + r.lastFile;
-      if (r.lastMatrixTime) {
-        const tglM = new Date(r.lastMatrixTime);
-        statusHtml += '<br><b>Matrix terakhir:</b> ' + tglM.toLocaleString('id-ID') + ' (' + (r.lastMatrixStatus || '-') + ')';
-      }
-        if (r.lastUrl) statusHtml += '<br><a href="' + r.lastUrl + '" target="_blank" style="color:#059669;">Buka di Drive &#8599;</a>';
-      } else {
-        statusHtml += '<br><i>Belum pernah backup</i>';
-      }
-      document.getElementById('abStatus').innerHTML = statusHtml;
-    } else {
-      document.getElementById('abStatus').innerHTML = 'Error: ' + (r.error || 'tidak diketahui');
-    }
-  } catch(e) {
-    document.getElementById('abStatus').innerHTML = 'Error: ' + e.message;
-  }
-}
-
-async function simpanAutoBackup() {
-  const enabled = document.getElementById('abEnabled').checked;
-  const jam = Number(document.getElementById('abJam').value);
-  const menit = Number(document.getElementById('abMenit').value);
-  const folder = document.getElementById('abFolder').value.trim() || 'Backup_AbsensiDriver';
-  const matrixEnabled = document.getElementById('abMatrix').checked;
-  if (!enabled) { toast('Centang "Aktifkan auto-backup" dulu'); return; }
-  if (isNaN(jam) || jam < 0 || jam > 23) { toast('Jam harus 0-23'); return; }
-  if (isNaN(menit) || menit < 0 || menit > 59) { toast('Menit harus 0-59'); return; }
-  toast('Menyimpan setting...');
-  try {
-    const r = await api({ action: 'setup_autobackup', jam: jam, menit: menit, folder: folder, matrixEnabled: matrixEnabled });
-    if (r.ok) {
-      toast('✅ ' + r.msg);
-      setTimeout(bukaModalAutoBackup, 800);
-    } else toast('Gagal: ' + r.error);
-  } catch(e) { toast('Error: ' + e.message); }
-}
-
-async function matikanAutoBackup() {
-  if (!confirm('Matikan auto-backup harian?')) return;
-  try {
-    const r = await api({ action: 'hapus_autobackup' });
-    if (r.ok) {
-      toast('Auto-backup dimatikan');
-      setTimeout(bukaModalAutoBackup, 800);
-    } else toast('Gagal: ' + r.error);
-  } catch(e) { toast('Error: ' + e.message); }
-}
-
-async function testAutoBackup() {
-  if (!confirm('Buat file backup sekarang? (5-10 detik)')) return;
-  toast('Membuat file backup...');
-  try {
-    const r = await api({ action: 'test_autobackup' });
-    if (r.ok) {
-      toast('✅ Berhasil: ' + r.file);
-      setTimeout(bukaModalAutoBackup, 1200);
-    } else toast('Gagal: ' + (r.error || 'tidak diketahui'));
-  } catch(e) { toast('Error: ' + e.message); }
-}
-
-async function buatMatrix() {
-  if (!navigator.onLine) return toast('Butuh internet');
-  if (!confirm('Buat sheet "Matrix" di Google Sheets untuk bulan ' + NAMA_BULAN[curBulan] + ' ' + curTahun + '?')) return;
-  toast('Membuat Matrix...');
-  try {
-    const r = await api({ action: 'buat_matrix', bulan: curBulan, tahun: curTahun });
-    if (r.ok) {
-      toast('✅ Sheet Matrix dibuat. Cek Google Sheets!');
-    } else {
-      toast('Gagal: ' + r.error);
-    }
-  } catch (e) { toast('Gagal: ' + e.message); }
-}loadCache();
-renderTabel();
-updateBadge();
-refreshData(true);
-// ============ MODAL MULTI-SHIFT ============
+// ================== MODAL SHIFT ==================
 let currentShiftTarget = null;
 let currentShiftData = [];
 let pickerShiftTargetIdx = -1;
@@ -1311,17 +379,13 @@ function bukaModalShift(nama, tgl) {
   const key = nama + '|' + tgl;
   currentShiftData = JSON.parse(JSON.stringify(getShifts(key)));
   if (currentShiftData.length === 0) currentShiftData.push({ out: '', in: '' });
-  
   document.getElementById('shiftTitle').textContent = 'Shift - ' + nama;
   document.getElementById('shiftInfo').innerHTML = '<b>Tanggal:</b> ' + tgl;
   renderListShift();
   document.getElementById('modalShift').classList.add('show');
 }
 
-function tutupModalShift() {
-  document.getElementById('modalShift').classList.remove('show');
-  currentShiftTarget = null; currentShiftData = [];
-}
+function tutupModalShift() { document.getElementById('modalShift').classList.remove('show'); currentShiftTarget = null; currentShiftData = []; }
 
 function renderListShift() {
   const container = document.getElementById('shiftList');
@@ -1331,13 +395,13 @@ function renderListShift() {
     row.style.cssText = 'display:grid; grid-template-columns: 1fr 1fr 40px; gap:8px; margin-bottom:8px; align-items:center;';
     
     const inpOut = document.createElement('input');
-    inpOut.type = 'text'; inpOut.readOnly = true; inpOut.className = 'cell-input';
+    inpOut.type = 'text'; inpOut.readOnly = true;
     inpOut.style.cssText = 'width:100%; padding:10px; text-align:center; border:1px solid #ccc; border-radius:5px; font-weight:bold; color:#C00000;';
     inpOut.value = s.out || '--:--';
     inpOut.onclick = function() { bukaPickerShift(idx, 'out'); };
     
     const inpIn = document.createElement('input');
-    inpIn.type = 'text'; inpIn.readOnly = true; inpIn.className = 'cell-input';
+    inpIn.type = 'text'; inpIn.readOnly = true;
     inpIn.style.cssText = 'width:100%; padding:10px; text-align:center; border:1px solid #ccc; border-radius:5px; font-weight:bold; color:#C00000;';
     inpIn.value = s.in || '--:--';
     inpIn.onclick = function() { bukaPickerShift(idx, 'in'); };
@@ -1353,204 +417,340 @@ function renderListShift() {
 }
 
 function tambahBarisShift() { currentShiftData.push({ out: '', in: '' }); renderListShift(); }
-function hapusBarisShift(idx) {
-  currentShiftData.splice(idx, 1);
-  if (currentShiftData.length === 0) currentShiftData.push({ out: '', in: '' });
-  renderListShift();
-}
-
-function bukaPickerShift(idx, type) {
-  pickerTarget = null; 
-  pickerShiftTargetIdx = idx; pickerShiftTargetType = type;
-  const val = currentShiftData[idx][type];
-  if (val && /^\d{1,2}:\d{2}$/.test(val)) {
-    const parts = val.split(':');
-    pickerHour = parseInt(parts[0], 10); pickerMin = parseInt(parts[1], 10);
-  } else { pickerHour = null; pickerMin = null; }
-  
-  document.getElementById('pickerTitle').textContent = 'Pilih Jam ' + (type === 'out' ? 'OUT' : 'IN');
-  document.getElementById('pickerInfo').innerHTML = '<b>Driver:</b> ' + currentShiftTarget.nama;
-  updatePickerPreview();
-  document.getElementById('pickerJam').classList.add('show');
-}
+function hapusBarisShift(idx) { currentShiftData.splice(idx, 1); if (currentShiftData.length === 0) currentShiftData.push({ out: '', in: '' }); renderListShift(); }
 
 async function simpanSemuaShift() {
   if (!currentShiftTarget) return;
   toast('Menyimpan...');
   try {
     const r = await api({ action: 'simpan_shifts', nama: currentShiftTarget.nama, tanggal: currentShiftTarget.tgl, shifts: currentShiftData });
-    if (r.ok) {
-      toast('✅ Shift tersimpan');
-      tutupModalShift();
-      refreshData(true);
-    } else { toast('Gagal: ' + r.error); }
+    if (r.ok) { toast('✅ Shift tersimpan'); tutupModalShift(); refreshData(true); } 
+    else { toast('Gagal: ' + r.error); }
   } catch(e) { toast('Error: ' + e.message); }
 }
-</script>
-<div class="modal-bg" id="modalExport">
-  <div class="modal">
-    <div class="modal-header" style="background:#fd7e14;">
-      <span>&#128190; Export Excel</span>
-      <button class="modal-close" onclick="tutupModal('modalExport')">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div style="margin-bottom:10px;">
-        <label style="font-size:11px;font-weight:bold;">Bulan</label>
-        <select id="expBulan" style="width:100%;padding:9px;border:1px solid #ccc;border-radius:5px;font-size:14px;">
-          <option value="1">JANUARI</option>
-          <option value="2">FEBRUARI</option>
-          <option value="3">MARET</option>
-          <option value="4">APRIL</option>
-          <option value="5">MEI</option>
-          <option value="6">JUNI</option>
-          <option value="7">JULI</option>
-          <option value="8">AGUSTUS</option>
-          <option value="9">SEPTEMBER</option>
-          <option value="10">OKTOBER</option>
-          <option value="11">NOVEMBER</option>
-          <option value="12">DESEMBER</option>
-        </select>
-      </div>
-      <div style="margin-bottom:10px;">
-        <label style="font-size:11px;font-weight:bold;">Tahun</label>
-        <input type="number" id="expTahun" style="width:100%;padding:9px;border:1px solid #ccc;border-radius:5px;font-size:14px;">
-      </div>
-      <div style="margin-bottom:10px;padding:8px;background:#f8f9fa;border-radius:5px;">
-        <label style="font-size:12px;cursor:pointer;"><input type="checkbox" id="expPakaiRange" onchange="toggleRange()"> Pakai rentang tanggal</label>
-      </div>
-      <div id="rangeFields" style="display:none;">
-        <div style="margin-bottom:10px;">
-          <label style="font-size:11px;font-weight:bold;">Dari tanggal</label>
-          <input type="date" id="expDari" style="width:100%;padding:9px;border:1px solid #ccc;border-radius:5px;font-size:14px;">
-        </div>
-        <div style="margin-bottom:10px;">
-          <label style="font-size:11px;font-weight:bold;">Sampai tanggal</label>
-          <input type="date" id="expSampai" style="width:100%;padding:9px;border:1px solid #ccc;border-radius:5px;font-size:14px;">
-        </div>
-      </div>
-      <button onclick="exportXLSXRange()" style="width:100%;padding:12px;background:#fd7e14;color:white;border:none;border-radius:5px;font-size:15px;font-weight:bold;margin-top:12px;cursor:pointer;">&#128190; Download Excel</button>
-      <button onclick="printRangeDariModal()" style="width:100%;padding:12px;background:#6c757d;color:white;border:none;border-radius:5px;font-size:15px;font-weight:bold;margin-top:8px;cursor:pointer;">&#128424; Print Range Ini</button>
-    </div>
-  </div>
-</div>
-<div class="modal-bg" id="modalRingkasan">
-  <div class="modal" style="max-width:98%;">
-    <div class="modal-header" style="background:#9333ea;">
-      <span>&#9201; Ringkasan Kinerja Driver</span>
-      <button class="modal-close" onclick="tutupModal('modalRingkasan')">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-        <div>
-          <label style="font-size:11px;font-weight:bold;">Bulan</label>
-          <select id="rngBulan" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:5px;font-size:13px;">
-            <option value="1">JANUARI</option><option value="2">FEBRUARI</option>
-            <option value="3">MARET</option><option value="4">APRIL</option>
-            <option value="5">MEI</option><option value="6">JUNI</option>
-            <option value="7">JULI</option><option value="8">AGUSTUS</option>
-            <option value="9">SEPTEMBER</option><option value="10">OKTOBER</option>
-            <option value="11">NOVEMBER</option><option value="12">DESEMBER</option>
-          </select>
-        </div>
-        <div>
-          <label style="font-size:11px;font-weight:bold;">Tahun</label>
-          <input type="number" id="rngTahun" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:5px;font-size:13px;box-sizing:border-box;">
-        </div>
-      </div>
-      <div style="margin-bottom:10px;padding:6px;background:#f8f9fa;border-radius:5px;">
-        <label style="font-size:12px;cursor:pointer;"><input type="checkbox" id="rngPakaiRange" onchange="document.getElementById('rngRangeFields').style.display=this.checked?'block':'none'"> Pakai range tanggal</label>
-      </div>
-      <div id="rngRangeFields" style="display:none;margin-bottom:10px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <div><label style="font-size:11px;font-weight:bold;">Dari</label><input type="date" id="rngDari" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:5px;box-sizing:border-box;"></div>
-          <div><label style="font-size:11px;font-weight:bold;">Sampai</label><input type="date" id="rngSampai" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:5px;box-sizing:border-box;"></div>
-        </div>
-      </div>
-      <div style="display:flex;gap:6px;margin-bottom:12px;">
-        <button onclick="renderRingkasan()" style="flex:1;padding:10px;background:#9333ea;color:white;border:none;border-radius:5px;font-weight:bold;cursor:pointer;">&#128269; Tampilkan</button>
-        <button onclick="exportRingkasanXLSX()" style="flex:1;padding:10px;background:#28A745;color:white;border:none;border-radius:5px;font-weight:bold;cursor:pointer;">&#128190; Export XLSX</button>
-      </div>
-      <div id="rngHasil" style="overflow:auto;max-height:50vh;border:1px solid #ccc;border-radius:5px;"></div>
-      <div class="hint" style="margin-top:10px;">&#9432; Angka menunjukkan durasi kerja (IN - OUT). Format <b>8:15</b> = 8 jam 15 menit. Baris merah = belum lengkap. Kolom TOTAL = akumulasi jam kerja.</div>
-    </div>
-  </div>
-</div>
-<div class="modal-bg" id="modalAutoBackup">
-  <div class="modal">
-    <div class="modal-header" style="background:#059669;">
-      <span>&#128190; Auto-Backup ke Google Drive</span>
-      <button class="modal-close" onclick="tutupModal('modalAutoBackup')">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div style="margin-bottom:10px;padding:8px;background:#f0fdf4;border-radius:5px;font-size:12px;">
-        <label style="cursor:pointer;font-weight:bold;"><input type="checkbox" id="abEnabled" style="margin-right:6px;"> Aktifkan auto-backup harian</label>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-        <div>
-          <label style="font-size:11px;font-weight:bold;">Jam (0-23)</label>
-          <input type="number" id="abJam" min="0" max="23" value="23" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:5px;font-size:13px;box-sizing:border-box;">
-        </div>
-        <div>
-          <label style="font-size:11px;font-weight:bold;">Menit (0-59)</label>
-          <input type="number" id="abMenit" min="0" max="59" value="0" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:5px;font-size:13px;box-sizing:border-box;">
-        </div>
-      </div>
-      <div style="margin-bottom:10px;">
-        <label style="font-size:11px;font-weight:bold;">Nama Folder di Drive</label>
-        <input type="text" id="abFolder" value="Backup_AbsensiDriver" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:5px;font-size:13px;box-sizing:border-box;">
-      </div>
-      <div id="abStatus" style="margin-bottom:12px;padding:10px;background:#f8f9fa;border-radius:5px;font-size:12px;color:#333;"></div>
-      <button onclick="simpanAutoBackup()" style="width:100%;padding:11px;background:#059669;color:white;border:none;border-radius:5px;font-size:14px;font-weight:bold;cursor:pointer;margin-bottom:6px;">&#128190; Simpan &amp; Aktifkan</button>
-      <button onclick="testAutoBackup()" style="width:100%;padding:11px;background:#17A2B8;color:white;border:none;border-radius:5px;font-size:14px;font-weight:bold;cursor:pointer;margin-bottom:6px;">&#128260; Test Sekarang</button>
-      <button onclick="matikanAutoBackup()" style="width:100%;padding:11px;background:#dc3545;color:white;border:none;border-radius:5px;font-size:14px;font-weight:bold;cursor:pointer;">&#10060; Matikan Auto-Backup</button>
-      <div class="hint" style="margin-top:10px;">
-        &#9432; File akan dibuat dengan nama <code>laporan_YYYYMMDD_HHMM.xlsx</code> berisi data bulan berjalan, tersimpan di folder Drive yang ditentukan. Auto-backup berjalan di server Google, <b>tablet/PC tidak perlu menyala</b>.
-      </div>
-    </div>
-  </div>
-</div>
-<div class="picker-overlay" id="pickerJam">
-  <div class="picker">
-    <div class="picker-header">
-      <span id="pickerTitle">Pilih Jam</span>
-      <button class="pc-close" onclick="tutupPicker()">&times;</button>
-    </div>
-    <div class="picker-body">
-      <div class="picker-info" id="pickerInfo"></div>
-      <div class="picker-section">
-        <div class="picker-label">Jam</div>
-        <div class="picker-grid" id="pickerHourGrid"></div>
-      </div>
-      <div class="picker-section">
-        <div class="picker-label">Menit</div>
-        <div class="picker-grid" id="pickerMinGrid"></div>
-      </div>
-      <div class="picker-preview" id="pickerPreview">--:--</div>
-      <div class="picker-actions">
-        <button class="pc-clear" onclick="pickerClear()">Kosongkan</button>
-        <button class="pc-cancel" onclick="tutupPicker()">Batal</button>
-        <button class="pc-save" onclick="pickerSave()">Simpan</button>
-      </div>
-    </div>
-  </div>
-</div>
-<div class="picker-overlay" id="modalShift">
-  <div class="picker" style="max-width: 600px;">
-    <div class="picker-header" style="background: #fd7e14;">
-      <span id="shiftTitle">Kelola Shift</span>
-      <button class="pc-close" onclick="tutupModalShift()">&times;</button>
-    </div>
-    <div class="picker-body">
-      <div class="picker-info" id="shiftInfo" style="background:#fff4e6; color:#c2410c;"></div>
-      <div id="shiftList" style="margin-bottom:12px;"></div>
-      <button onclick="tambahBarisShift()" style="width:100%; padding:10px; background:#28A745; color:white; border:none; border-radius:6px; font-weight:bold; margin-bottom:16px; cursor:pointer;">+ Tambah Shift Baru</button>
-      <div class="picker-actions" style="grid-template-columns: 1fr 1fr;">
-        <button class="pc-cancel" onclick="tutupModalShift()">Batal</button>
-        <button class="pc-save" onclick="simpanSemuaShift()">Simpan Semua</button>
-      </div>
-    </div>
-  </div>
-</div>
 
+// ================== PICKER JAM ==================
+let pickerTarget = null;
+let pickerHour = null;
+let pickerMin = null;
+
+function inisialisasiPicker() {
+  const hourGrid = document.getElementById("pickerHourGrid");
+  const minGrid = document.getElementById("pickerMinGrid");
+  if (!hourGrid || !minGrid) return;
+  hourGrid.innerHTML = ""; minGrid.innerHTML = "";
+  for (let h = 0; h < 24; h++) {
+    const cell = document.createElement("div"); cell.className = "picker-cell"; cell.textContent = String(h).padStart(2, "0");
+    cell.onclick = function() { pickerHour = h; updatePickerPreview(); }; hourGrid.appendChild(cell);
+  }
+  for (let m = 0; m < 60; m++) {
+    const cell = document.createElement("div"); cell.className = "picker-cell"; cell.textContent = String(m).padStart(2, "0");
+    cell.onclick = function() { pickerMin = m; updatePickerPreview(); }; minGrid.appendChild(cell);
+  }
+}
+
+function bukaPickerShift(idx, type) {
+  pickerTarget = null; pickerShiftTargetIdx = idx; pickerShiftTargetType = type;
+  const val = currentShiftData[idx][type];
+  if (val && /^\d{1,2}:\d{2}$/.test(val)) {
+    const parts = val.split(':'); pickerHour = parseInt(parts[0], 10); pickerMin = parseInt(parts[1], 10);
+  } else { pickerHour = null; pickerMin = null; }
+  document.getElementById('pickerTitle').textContent = 'Pilih Jam ' + (type === 'out' ? 'OUT' : 'IN');
+  document.getElementById('pickerInfo').innerHTML = '<b>Driver:</b> ' + currentShiftTarget.nama;
+  updatePickerPreview(); document.getElementById('pickerJam').classList.add('show');
+}
+
+function updatePickerPreview() {
+  document.querySelectorAll("#pickerHourGrid .picker-cell").forEach(function(c) { c.classList.toggle("selected", Number(c.textContent) === pickerHour); });
+  document.querySelectorAll("#pickerMinGrid .picker-cell").forEach(function(c) { c.classList.toggle("selected", Number(c.textContent) === pickerMin); });
+  const h = pickerHour !== null ? String(pickerHour).padStart(2, "0") : "--";
+  const m = pickerMin !== null ? String(pickerMin).padStart(2, "0") : "--";
+  document.getElementById("pickerPreview").textContent = h + ":" + m;
+}
+
+function pickerClear() {
+  if (currentShiftTarget !== null && pickerTarget === null) {
+    currentShiftData[pickerShiftTargetIdx][pickerShiftTargetType] = ''; renderListShift(); document.getElementById('pickerJam').classList.remove('show');
+  } else if (pickerTarget) {
+    pickerTarget.value = ''; saveCell(pickerTarget); tutupPicker(); toast('Jam dikosongkan');
+  }
+}
+
+function pickerSave() {
+  if (currentShiftTarget !== null && pickerTarget === null) {
+    if (pickerHour === null || pickerMin === null) { toast('Pilih jam dulu'); return; }
+    currentShiftData[pickerShiftTargetIdx][pickerShiftTargetType] = String(pickerHour).padStart(2,'0') + ':' + String(pickerMin).padStart(2,'0');
+    renderListShift(); document.getElementById('pickerJam').classList.remove('show');
+  } else if (pickerTarget) {
+    if (pickerHour === null || pickerMin === null) { toast('Pilih jam & menit dulu'); return; }
+    pickerTarget.value = String(pickerHour).padStart(2, '0') + ':' + String(pickerMin).padStart(2, '0');
+    saveCell(pickerTarget); tutupPicker();
+  }
+}
+
+function tutupPicker() { document.getElementById('pickerJam').classList.remove('show'); pickerTarget = null; }
+
+// ================== CRUD DRIVER ==================
+function bukaModal(id) { document.getElementById(id).classList.add('show'); if (id === 'modalDriver') renderDriverModal(); }
+function tutupModal(id) { document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('.modal-bg').forEach(function(m) { m.addEventListener('click', function(e) { if (e.target === m) m.classList.remove('show'); }); });
+
+function renderDriverModal() {
+  document.getElementById('newTgl').value = new Date().toISOString().split('T')[0];
+  const tbody = document.getElementById('tblDriver'); tbody.innerHTML = '';
+  drivers.forEach(function(d) {
+    const tr = document.createElement('tr');
+    let badge = '<span class="badge aktif">AKTIF</span>';
+    if (d.tglResign) badge = '<span class="badge resign">RESIGN</span>';
+    else if (d.tglAktif && new Date(d.tglAktif) > new Date()) badge = '<span class="badge belum">BELUM</span>';
+    let btnAksi = d.tglResign ? '<button class="btn-sm btn-aktif" onclick="aktifkanDriver(' + d.id + ')">Aktif</button>' : '<button class="btn-sm btn-del" onclick="resignDriver(' + d.id + ')">Resign</button>';
+    tr.innerHTML = '<td><input type="text" value="' + d.nama + '" id="nm-' + d.id + '"></td><td><input type="date" value="' + (d.tglAktif || '') + '" id="ta-' + d.id + '"></td><td><input type="date" value="' + (d.tglResign || '') + '" id="tr-' + d.id + '"></td><td>' + badge + '</td><td><button class="btn-sm btn-save" onclick="simpanDriver(' + d.id + ')">Simpan</button>' + btnAksi + '</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+async function tambahDriver() {
+  const nama = document.getElementById('newNama').value.trim().toUpperCase();
+  const tgl = document.getElementById('newTgl').value;
+  if (!nama) return toast('Isi nama dulu');
+  if (!navigator.onLine) return toast('Tambah driver butuh internet');
+  try { const r = await api({ action: 'tambah_driver', nama: nama, tglAktif: tgl }); if (r.ok) { document.getElementById('newNama').value = ''; await refreshData(true); renderDriverModal(); toast('Driver ditambahkan'); } else toast(r.error); } catch (e) { toast('Gagal: ' + e.message); }
+}
+
+async function simpanDriver(id) {
+  if (!navigator.onLine) return toast('Butuh internet');
+  const nama = document.getElementById('nm-' + id).value.trim().toUpperCase();
+  const tglAktif = document.getElementById('ta-' + id).value; const tglResign = document.getElementById('tr-' + id).value;
+  try { const r = await api({ action: 'update_driver', id: id, nama: nama, tglAktif: tglAktif, tglResign: tglResign }); if (r.ok) { await refreshData(true); renderDriverModal(); toast('Tersimpan'); } else toast(r.error); } catch (e) { toast('Gagal: ' + e.message); }
+}
+
+async function resignDriver(id) {
+  const d = drivers.find(function(x) { return x.id === id; });
+  const tgl = prompt('Tanggal resign ' + d.nama + ' (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
+  if (!tgl) return; if (!navigator.onLine) return toast('Butuh internet');
+  try { const r = await api({ action: 'update_driver', id: id, tglResign: tgl }); if (r.ok) { await refreshData(true); renderDriverModal(); toast('Driver resign'); } else toast(r.error); } catch (e) { toast('Gagal: ' + e.message); }
+}
+
+async function aktifkanDriver(id) {
+  if (!navigator.onLine) return toast('Butuh internet');
+  try { const r = await api({ action: 'update_driver', id: id, tglResign: '' }); if (r.ok) { await refreshData(true); renderDriverModal(); toast('Driver aktif kembali'); } else toast(r.error); } catch (e) { toast('Gagal: ' + e.message); }
+}
+
+// ================== MATRIX ==================
+async function buatMatrix() {
+  if (!navigator.onLine) return toast('Butuh internet');
+  if (!confirm('Buat sheet "Matrix" untuk bulan ' + NAMA_BULAN[curBulan] + ' ' + curTahun + '?')) return;
+  toast('Membuat Matrix...');
+  try { const r = await api({ action: 'buat_matrix', bulan: curBulan, tahun: curTahun }); if (r.ok) { toast('✅ Sheet Matrix dibuat.'); } else { toast('Gagal: ' + r.error); } } catch (e) { toast('Gagal: ' + e.message); }
+}
+
+async function uploadMatrix() {
+  if (!navigator.onLine) return toast('Butuh internet');
+  if (!confirm('Tarik data dari sheet Matrix ke HTML? (Sheet Data akan di-update)')) return;
+  toast('Mengambil data dari Matrix...');
+  try { const r = await api({ action: 'sync_dari_matrix' }); if (r.ok) { toast('✅ ' + r.msg); await refreshData(true); } else { toast('Gagal: ' + r.error); } } catch (e) { toast('Gagal: ' + e.message); }
+}
+
+// ================== EXPORT XLSX ==================
+function bukaModalExport() {
+  document.getElementById('expBulan').value = curBulan; document.getElementById('expTahun').value = curTahun;
+  document.getElementById('expPakaiRange').checked = false; document.getElementById('rangeFields').style.display = 'none';
+  const tgl1 = curTahun + '-' + String(curBulan).padStart(2,'0') + '-01'; const lastDay = new Date(curTahun, curBulan, 0).getDate();
+  const tgl2 = curTahun + '-' + String(curBulan).padStart(2,'0') + '-' + String(lastDay).padStart(2,'0');
+  document.getElementById('expDari').value = tgl1; document.getElementById('expSampai').value = tgl2;
+  document.getElementById('modalExport').classList.add('show');
+}
+
+function toggleRange() { document.getElementById('rangeFields').style.display = document.getElementById('expPakaiRange').checked ? 'block' : 'none'; }
+
+async function exportXLSXRange() {
+  if (typeof XLSX === 'undefined') { toast('Library XLSX belum siap'); return; }
+  const bulan = Number(document.getElementById('expBulan').value); const tahun = Number(document.getElementById('expTahun').value);
+  const pakaiRange = document.getElementById('expPakaiRange').checked; const dariStr = document.getElementById('expDari').value; const sampaiStr = document.getElementById('expSampai').value;
+  let startDate, endDate;
+  if (pakaiRange) { if (!dariStr || !sampaiStr) { toast('Isi tanggal'); return; } startDate = new Date(dariStr + 'T00:00:00'); endDate = new Date(sampaiStr + 'T00:00:00'); if (startDate > endDate) { toast('Tanggal dari > sampai'); return; } } else { startDate = new Date(tahun, bulan - 1, 1); endDate = new Date(tahun, bulan, 0); }
+  toast('Menyiapkan data...');
+  const bulanSet = []; let cur = new Date(startDate);
+  while (cur <= endDate) { const key = cur.getFullYear() + '-' + (cur.getMonth() + 1); if (bulanSet.indexOf(key) === -1) bulanSet.push(key); cur.setDate(cur.getDate() + 1); }
+  const dataAll = {};
+  try { for (let i = 0; i < bulanSet.length; i++) { const parts = bulanSet[i].split('-'); const r = await api({ action: 'data', bulan: Number(parts[1]), tahun: Number(parts[0]) }); if (r.ok && r.data) for (const k in r.data) if (r.data.hasOwnProperty(k)) dataAll[k] = r.data[k]; } } catch(e) { toast('Gagal ambil data'); return; }
+  let driversAll = drivers; try { const rd = await api({ action: 'drivers' }); if (rd.ok) driversAll = rd.drivers || []; } catch(e) {}
+  const daftarDriver = driversAll.filter(function(d) { if (d.tglAktif && d.tglAktif > endDate.toISOString().slice(0,10)) return false; if (d.tglResign && d.tglResign < startDate.toISOString().slice(0,10)) return false; return true; });
+  const dateArr = []; let cur2 = new Date(startDate); while (cur2 <= endDate) { dateArr.push(new Date(cur2)); cur2.setDate(cur2.getDate() + 1); }
+  const totalCol = 2 + dateArr.length * 2; const blnShort = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+  const aoa = []; const judul = ['KINERJA DRIVER'];
+  if (pakaiRange) judul[0] += ' PERIODE ' + dariStr + ' s/d ' + sampaiStr; else judul[0] += ' BULAN ' + NAMA_BULAN[bulan] + ' ' + tahun;
+  for (let i = 1; i < totalCol; i++) judul.push(''); aoa.push(judul);
+  const kosong = []; for (let i = 0; i < totalCol; i++) kosong.push(''); aoa.push(kosong);
+  const headHari = ['NO', 'NAMA']; for (let h = 0; h < dateArr.length; h++) { const tgl = dateArr[h]; const dow = (tgl.getDay() + 6) % 7; const tglStr = String(tgl.getDate()).padStart(2,'0') + '-' + blnShort[tgl.getMonth()] + '-' + String(tgl.getFullYear()).slice(-2); headHari.push(NAMA_HARI[dow] + ' ' + tglStr, ''); } aoa.push(headHari);
+  const headOI = ['', '']; for (let h = 0; h < dateArr.length; h++) headOI.push('OUT', 'IN'); aoa.push(headOI);
+  daftarDriver.forEach(function(drv, idx) {
+    const row = [idx + 1, drv.nama];
+    for (let h = 0; h < dateArr.length; h++) {
+      const tgl = dateArr[h]; const tglStr = tgl.getFullYear() + '-' + String(tgl.getMonth()+1).padStart(2,'0') + '-' + String(tgl.getDate()).padStart(2,'0'); const key = drv.nama + '|' + tglStr;
+      const shifts = dataAll[key] || [];
+      row.push(shifts.map(function(s) { return s.out; }).filter(Boolean).join(', '), shifts.map(function(s) { return s.in; }).filter(Boolean).join(', '));
+    }
+    aoa.push(row);
+  });
+  const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!merges'] = [{s: {r: 0, c: 0}, e: {r: 0, c: totalCol - 1}}, {s: {r: 2, c: 0}, e: {r: 3, c: 0}}, {s: {r: 2, c: 1}, e: {r: 3, c: 1}}];
+  for (let h = 0; h < dateArr.length; h++) { const col = 2 + h * 2; ws['!merges'].push({s: {r: 2, c: col}, e: {r: 2, c: col + 1}}); }
+  const wscols = [{wch: 5}, {wch: 15}]; for (let i = 0; i < dateArr.length * 2; i++) wscols.push({wch: 15}); ws['!cols'] = wscols;
+  XLSX.utils.book_append_sheet(wb, ws, 'Absensi');
+  let fname = 'AbsensiDriver'; if (pakaiRange) fname += '_' + dariStr + '_sd_' + sampaiStr; else fname += '_' + NAMA_BULAN[bulan] + '_' + tahun; fname += '.xlsx';
+  XLSX.writeFile(wb, fname); tutupModal('modalExport'); toast('File Excel siap');
+}
+
+// ================== PRINT ==================
+function printHalaman() {
+  document.querySelectorAll('td.cell input').forEach(function(inp) {
+    if (inp.nextElementSibling && inp.nextElementSibling.classList && inp.nextElementSibling.classList.contains('print-val')) return;
+    const span = document.createElement('span'); span.className = 'print-val'; span.textContent = inp.value ? inp.value : '--:--';
+    inp.parentNode.insertBefore(span, inp.nextSibling);
+  });
+  setTimeout(function() { window.print(); }, 100);
+}
+window.addEventListener('afterprint', function() { document.querySelectorAll('.print-val').forEach(function(sp) { sp.remove(); }); });
+
+async function cetakKeIframe(bulan, tahun, dariStr, sampaiStr) {
+  toast('Menyiapkan print...');
+  if (!dariStr || !sampaiStr) { toast('Isi tanggal dari & sampai'); return; }
+  const d1 = new Date(dariStr + 'T00:00:00'); const d2 = new Date(sampaiStr + 'T00:00:00');
+  if (d1 > d2) { toast('Tanggal dari > sampai'); return; }
+  const bulanSet = []; let cur = new Date(d1); while (cur <= d2) { const key = cur.getFullYear() + '-' + (cur.getMonth() + 1); if (bulanSet.indexOf(key) === -1) bulanSet.push(key); cur.setDate(cur.getDate() + 1); }
+  const dataAll = {};
+  try { for (let i = 0; i < bulanSet.length; i++) { const parts = bulanSet[i].split('-'); const r = await api({ action: 'data', bulan: Number(parts[1]), tahun: Number(parts[0]) }); if (r.ok && r.data) for (const k in r.data) if (r.data.hasOwnProperty(k)) dataAll[k] = r.data[k]; } } catch(e) { toast('Gagal ambil data'); return; }
+  let driversAll = drivers; try { const rd = await api({ action: 'drivers' }); if (rd.ok) driversAll = rd.drivers || []; } catch(e) {}
+  const daftarDriver = driversAll.filter(function(d) { if (d.tglAktif && d.tglAktif > d2.toISOString().slice(0,10)) return false; if (d.tglResign && d.tglResign < d1.toISOString().slice(0,10)) return false; return true; });
+  const dateArr = []; let cur2 = new Date(d1); while (cur2 <= d2) { dateArr.push(new Date(cur2)); cur2.setDate(cur2.getDate() + 1); }
+  const blnShort = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+  let html = '<html><head><meta charset="UTF-8"><title>Absensi Driver</title><style>@page { size: A4 landscape; margin: 0.5cm; } body { font-family: Arial; font-size: 9px; margin: 4px; } h2 { text-align: center; font-size: 13px; margin: 4px 0; background: #FFC000; padding: 6px; } table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid #333; padding: 1px 2px; text-align: center; font-size: 8px; } th { background: #FFC000; } th.monday { background: #FF0000; color: white; } th.out { background: #92D050; } th.in { background: #C6E0B4; } td.name { text-align: left; font-weight: bold; padding-left: 4px; background: #FFF2CC; } td.no { background: #FFF2CC; }</style></head><body>';
+  html += '<h2>KINERJA DRIVER PERIODE ' + dariStr + ' s/d ' + sampaiStr + '</h2><table><thead><tr><th rowspan="2">NO</th><th rowspan="2">NAMA</th>';
+  for (let h = 0; h < dateArr.length; h++) { const tgl = dateArr[h]; const dow = (tgl.getDay() + 6) % 7; const cls = dow === 0 ? ' class="monday"' : ''; html += '<th colspan="2"' + cls + '>' + NAMA_HARI[dow] + ' ' + String(tgl.getDate()).padStart(2,'0') + '-' + blnShort[tgl.getMonth()] + '-' + String(tgl.getFullYear()).slice(-2) + '</th>'; }
+  html += '</tr><tr>'; for (let h = 0; h < dateArr.length; h++) html += '<th class="out">OUT</th><th class="in">IN</th>'; html += '</tr></thead><tbody>';
+  daftarDriver.forEach(function(drv, idx) {
+    html += '<tr><td class="no">' + (idx + 1) + '</td><td class="name">' + drv.nama + '</td>';
+    for (let h = 0; h < dateArr.length; h++) {
+      const tgl = dateArr[h]; const tglStr = tgl.getFullYear() + '-' + String(tgl.getMonth() + 1).padStart(2,'0') + '-' + String(tgl.getDate()).padStart(2,'0'); const shifts = dataAll[drv.nama + '|' + tglStr] || [];
+      html += '<td>' + (shifts.map(function(s) { return s.out; }).filter(Boolean).join(', ') || '--:--') + '</td><td>' + (shifts.map(function(s) { return s.in; }).filter(Boolean).join(', ') || '--:--') + '</td>';
+    }
+    html += '</tr>';
+  });
+  html += '</tbody></table></body></html>';
+  const iframe = document.createElement('iframe'); iframe.style.position = 'fixed'; iframe.style.right = '0'; iframe.style.bottom = '0'; iframe.style.width = '0'; iframe.style.height = '0'; iframe.style.border = '0';
+  document.body.appendChild(iframe); iframe.contentDocument.open(); iframe.contentDocument.write(html); iframe.contentDocument.close();
+  iframe.onload = function() { iframe.contentWindow.focus(); iframe.contentWindow.print(); setTimeout(function() { document.body.removeChild(iframe); }, 2000); }; tutupModal('modalExport');
+}
+
+// ================== RINGKASAN ==================
+function hitungMenit(outStr, inStr) {
+  if (!outStr || !inStr) return null;
+  const p1 = String(outStr).split(':'); const p2 = String(inStr).split(':');
+  if (p1.length < 2 || p2.length < 2) return null;
+  const oh = Number(p1[0]), om = Number(p1[1]); const ih = Number(p2[0]), im = Number(p2[1]);
+  if (isNaN(oh) || isNaN(om) || isNaN(ih) || isNaN(im)) return null;
+  let m = (ih * 60 + im) - (oh * 60 + om); if (m < 0) m += 24 * 60; return m;
+}
+function formatJamKerja(menit) { if (menit === null || menit === undefined) return ''; const j = Math.floor(menit / 60); const m = menit % 60; return j + ':' + String(m).padStart(2, '0'); }
+
+function bukaModalRingkasan() {
+  document.getElementById('rngBulan').value = curBulan; document.getElementById('rngTahun').value = curTahun;
+  document.getElementById('rngPakaiRange').checked = false; document.getElementById('rngRangeFields').style.display = 'none';
+  const tgl1 = curTahun + '-' + String(curBulan).padStart(2,'0') + '-01'; const lastDay = new Date(curTahun, curBulan, 0).getDate();
+  const tgl2 = curTahun + '-' + String(curBulan).padStart(2,'0') + '-' + String(lastDay).padStart(2,'0');
+  document.getElementById('rngDari').value = tgl1; document.getElementById('rngSampai').value = tgl2;
+  document.getElementById('modalRingkasan').classList.add('show'); renderRingkasan();
+}
+
+let lastRingkasan = null;
+async function renderRingkasan() {
+  const bulan = Number(document.getElementById('rngBulan').value); const tahun = Number(document.getElementById('rngTahun').value);
+  const pakaiRange = document.getElementById('rngPakaiRange').checked; const dariStr = document.getElementById('rngDari').value; const sampaiStr = document.getElementById('rngSampai').value;
+  let startDate, endDate;
+  if (pakaiRange) { if (!dariStr || !sampaiStr) { toast('Isi tanggal'); return; } startDate = new Date(dariStr + 'T00:00:00'); endDate = new Date(sampaiStr + 'T00:00:00'); if (startDate > endDate) { toast('Tanggal dari > sampai'); return; } } else { startDate = new Date(tahun, bulan - 1, 1); endDate = new Date(tahun, bulan, 0); }
+  toast('Menghitung ringkasan...');
+  const bulanSet = []; let cur = new Date(startDate); while (cur <= endDate) { const key = cur.getFullYear() + '-' + (cur.getMonth() + 1); if (bulanSet.indexOf(key) === -1) bulanSet.push(key); cur.setDate(cur.getDate() + 1); }
+  const dataAll = {};
+  try { for (let i = 0; i < bulanSet.length; i++) { const parts = bulanSet[i].split('-'); const r = await api({ action: 'data', bulan: Number(parts[1]), tahun: Number(parts[0]) }); if (r.ok && r.data) for (const k in r.data) if (r.data.hasOwnProperty(k)) dataAll[k] = r.data[k]; } } catch(e) { toast('Gagal ambil data'); return; }
+  let driversAll = drivers; try { const rd = await api({ action: 'drivers' }); if (rd.ok) driversAll = rd.drivers || []; } catch(e) {}
+  const daftarDriver = driversAll.filter(function(d) { if (d.tglAktif && d.tglAktif > endDate.toISOString().slice(0,10)) return false; if (d.tglResign && d.tglResign < startDate.toISOString().slice(0,10)) return false; return true; });
+  const dateArr = []; let cur2 = new Date(startDate); while (cur2 <= endDate) { dateArr.push(new Date(cur2)); cur2.setDate(cur2.getDate() + 1); }
+  let grandTotalMenit = 0; const hasil = [];
+  const bulanList = []; dateArr.forEach(function(tgl) { const key = tgl.getFullYear() + '-' + tgl.getMonth(); const last = bulanList[bulanList.length - 1]; if (!last || last.key !== key) { bulanList.push({ key: key, nama: NAMA_BULAN[tgl.getMonth()+1] + ' ' + tgl.getFullYear(), jumlah: 1 }); } else { last.jumlah++; } });
+  const multiBulan = bulanList.length > 1;
+  let html = '<table style="border-collapse:collapse;width:100%;font-size:10px;"><thead>';
+  if (multiBulan) { html += '<tr><th rowspan="2" style="background:#9333ea;color:white;padding:3px;border:1px solid #555;">NO</th><th rowspan="2" style="background:#9333ea;color:white;padding:3px;border:1px solid #555;text-align:left;">NAMA</th>'; bulanList.forEach(function(b) { html += '<th colspan="' + b.jumlah + '" style="background:#6b21a8;color:white;padding:3px;border:1px solid #555;font-size:10px;">' + b.nama + '</th>'; }); html += '<th rowspan="2" style="background:#28A745;color:white;padding:3px;border:1px solid #555;">TOTAL</th></tr><tr>'; } else { html += '<tr><th style="background:#9333ea;color:white;padding:3px;border:1px solid #555;">NO</th><th style="background:#9333ea;color:white;padding:3px;border:1px solid #555;text-align:left;">NAMA</th>'; }
+  for (let h = 0; h < dateArr.length; h++) { const tgl = dateArr[h]; const cls = tgl.getDay() === 1 ? 'background:#dc3545;color:white;' : 'background:#c4b5fd;'; html += '<th style="' + cls + 'padding:2px;border:1px solid #555;font-size:9px;">' + tgl.getDate() + '</th>'; }
+  if (!multiBulan) { html += '<th style="background:#28A745;color:white;padding:3px;border:1px solid #555;">TOTAL</th>'; } html += '</tr></thead><tbody>';
+  daftarDriver.forEach(function(drv, idx) {
+    const rowData = { nama: drv.nama, hari: [], total: 0 }; let totalMenit = 0;
+    html += '<tr><td style="text-align:center;padding:2px;border:1px solid #ccc;background:#f3f4f6;">' + (idx + 1) + '</td><td style="padding:2px 6px;border:1px solid #ccc;font-weight:bold;background:#f3f4f6;">' + drv.nama + '</td>';
+    for (let h = 0; h < dateArr.length; h++) {
+      const tgl = dateArr[h]; const tglStr = tgl.getFullYear() + '-' + String(tgl.getMonth() + 1).padStart(2,'0') + '-' + String(tgl.getDate()).padStart(2,'0'); const shifts = dataAll[drv.nama + '|' + tglStr] || [];
+      let menitHariIni = null;
+      if (shifts.length > 0) { menitHariIni = 0; let valid = false; shifts.forEach(function(s) { const m = hitungMenit(s.out, s.in); if (m !== null) { menitHariIni += m; valid = true; } }); if (!valid) menitHariIni = null; }
+      if (menitHariIni !== null) totalMenit += menitHariIni; rowData.hari.push(menitHariIni);
+      const txt = menitHariIni !== null ? formatJamKerja(menitHariIni) : (shifts.length > 0 ? '?' : '');
+      const warna = menitHariIni !== null ? '' : (shifts.length > 0 ? 'background:#fee2e2;' : 'background:#f9fafb;');
+      html += '<td style="text-align:center;padding:2px;border:1px solid #eee;font-size:10px;' + warna + '">' + txt + '</td>';
+    }
+    rowData.total = totalMenit; grandTotalMenit += totalMenit;
+    html += '<td style="text-align:center;padding:2px;border:1px solid #ccc;font-weight:bold;background:#d1fae5;">' + formatJamKerja(totalMenit) + '</td></tr>';
+    hasil.push(rowData);
+  });
+  html += '</tbody><tfoot><tr><td colspan="' + (2 + dateArr.length) + '" style="text-align:right;padding:4px;border:1px solid #555;background:#9333ea;color:white;font-weight:bold;">GRAND TOTAL</td><td style="text-align:center;padding:4px;border:1px solid #555;background:#9333ea;color:white;font-weight:bold;">' + formatJamKerja(grandTotalMenit) + '</td></tr></tfoot></table>';
+  document.getElementById('rngHasil').innerHTML = html;
+  lastRingkasan = { periode: pakaiRange ? (dariStr + ' s/d ' + sampaiStr) : ('Bulan ' + bulan + '/' + tahun), drivers: hasil, dates: dateArr, grand: grandTotalMenit };
+  toast('Ringkasan siap');
+}
+
+function exportRingkasanXLSX() {
+  if (!lastRingkasan) { toast('Tampilkan dulu'); return; }
+  if (typeof XLSX === 'undefined') { toast('Library XLSX belum siap'); return; }
+  const blnShort = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+  const aoa = []; const head = ['NO', 'NAMA']; lastRingkasan.dates.forEach(function(tgl) { head.push(String(tgl.getDate()).padStart(2,'0') + '-' + blnShort[tgl.getMonth()]); }); head.push('TOTAL');
+  aoa.push(['RINGKASAN KINERJA DRIVER']); aoa.push(['Periode: ' + lastRingkasan.periode]); aoa.push([]); aoa.push(head);
+  lastRingkasan.drivers.forEach(function(d, idx) { const row = [idx + 1, d.nama]; d.hari.forEach(function(m) { row.push(m !== null ? formatJamKerja(m) : ''); }); row.push(formatJamKerja(d.total)); aoa.push(row); });
+  const foot = ['', 'GRAND TOTAL']; for (let i = 0; i < lastRingkasan.dates.length; i++) foot.push(''); foot.push(formatJamKerja(lastRingkasan.grand)); aoa.push(foot);
+  const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!merges'] = [{s: {r: 0, c: 0}, e: {r: 0, c: head.length - 1}}];
+  const wscols = [{wch: 5}, {wch: 15}]; for (let i = 0; i < lastRingkasan.dates.length; i++) wscols.push({wch: 8}); wscols.push({wch: 10}); ws['!cols'] = wscols;
+  XLSX.utils.book_append_sheet(wb, ws, 'Ringkasan'); XLSX.writeFile(wb, 'RingkasanDriver_' + lastRingkasan.periode.replace(/[^0-9A-Za-z]/g, '_') + '.xlsx'); toast('File ringkasan di-download');
+}
+
+// ================== AUTO BACKUP & INIT ==================
+function bukaModalAutoBackup() {
+  document.getElementById('modalAutoBackup').classList.add('show'); document.getElementById('abStatus').innerHTML = 'Memuat status...';
+  api({ action: 'status_autobackup' }).then(function(r) {
+    if (r.ok) {
+      document.getElementById('abEnabled').checked = r.enabled; document.getElementById('abMatrix').checked = r.matrixEnabled || false;
+      if (r.jam) document.getElementById('abJam').value = r.jam; if (r.menit) document.getElementById('abMenit').value = r.menit; if (r.folder) document.getElementById('abFolder').value = r.folder;
+      let statusHtml = '<b>Status:</b> ' + (r.enabled ? '✅ Aktif' : '❌ Nonaktif');
+      if (r.lastTime) { const tgl = new Date(r.lastTime); statusHtml += '<br><b>Backup terakhir:</b> ' + tgl.toLocaleString('id-ID') + '<br><b>Hasil:</b> ' + (r.lastStatus || '-'); if (r.lastFile) statusHtml += '<br><b>File:</b> ' + r.lastFile; if (r.lastUrl) statusHtml += '<br><a href="' + r.lastUrl + '" target="_blank" style="color:#059669;">Buka di Drive &#8599;</a>'; if (r.lastMatrixTime) { const tglM = new Date(r.lastMatrixTime); statusHtml += '<br><b>Matrix terakhir:</b> ' + tglM.toLocaleString('id-ID') + ' (' + (r.lastMatrixStatus || '-') + ')'; } } else { statusHtml += '<br><i>Belum pernah backup</i>'; }
+      document.getElementById('abStatus').innerHTML = statusHtml;
+    } else { document.getElementById('abStatus').innerHTML = 'Error: ' + (r.error || 'tidak diketahui'); }
+  }).catch(function(e) { document.getElementById('abStatus').innerHTML = 'Error: ' + e.message; });
+}
+async function simpanAutoBackup() {
+  const enabled = document.getElementById('abEnabled').checked; const jam = Number(document.getElementById('abJam').value); const menit = Number(document.getElementById('abMenit').value); const folder = document.getElementById('abFolder').value.trim() || 'Backup_AbsensiDriver'; const matrixEnabled = document.getElementById('abMatrix').checked;
+  if (!enabled) { toast('Centang "Aktifkan auto-backup" dulu'); return; } if (isNaN(jam) || jam < 0 || jam > 23) { toast('Jam 0-23'); return; } if (isNaN(menit) || menit < 0 || menit > 59) { toast('Menit 0-59'); return; }
+  toast('Menyimpan setting...');
+  try { const r = await api({ action: 'setup_autobackup', jam: jam, menit: menit, folder: folder, matrixEnabled: matrixEnabled }); if (r.ok) { toast('✅ ' + r.msg); setTimeout(bukaModalAutoBackup, 800); } else toast('Gagal: ' + r.error); } catch(e) { toast('Error: ' + e.message); }
+}
+async function matikanAutoBackup() { if (!confirm('Matikan auto-backup?')) return; try { const r = await api({ action: 'hapus_autobackup' }); if (r.ok) { toast('Auto-backup dimatikan'); setTimeout(bukaModalAutoBackup, 800); } else toast('Gagal: ' + r.error); } catch(e) { toast('Error: ' + e.message); } }
+async function testAutoBackup() { if (!confirm('Buat file backup sekarang?')) return; toast('Membuat file backup...'); try { const r = await api({ action: 'test_autobackup' }); if (r.ok) { toast('✅ Berhasil: ' + r.file); setTimeout(bukaModalAutoBackup, 1200); } else toast('Gagal: ' + (r.error || 'tidak diketahui')); } catch(e) { toast('Error: ' + e.message); } }
+
+window.addEventListener('online', function() { updateBadge(); flushPending(); refreshData(true); });
+window.addEventListener('offline', updateBadge);
+setInterval(function() { if (navigator.onLine && getPending().length > 0) flushPending(); }, 30000);
+setInterval(function() { if (navigator.onLine) refreshData(true); }, 300000);
+
+inisialisasiPicker();
+loadCache();
+renderTabel();
+updateBadge();
+refreshData(true);
+</script>
 </body>
 </html>
