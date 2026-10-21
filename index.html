@@ -88,6 +88,18 @@ td.cell:hover { background: #f0f0f0; }
   .picker-cell { padding: 10px 2px; font-size: 14px; }
   .picker-preview { font-size: 34px; padding: 10px; }
 }
+/* === FREEZE PANE (STICKY COLUMNS) === */
+th.sticky-no, td.sticky-no { position: sticky; left: 0; z-index: 15; background-color: #FFF2CC; border-right: 1px solid #999; }
+th.sticky-nama, td.sticky-nama { position: sticky; left: 28px; z-index: 15; background-color: #FFF2CC; border-right: 2px solid #333; }
+
+/* Ringkasan Sticky */
+th.sticky-rng-no, td.sticky-rng-no { position: sticky; left: 0; z-index: 15; background-color: #9333ea; color: white; border-right: 1px solid #999; }
+th.sticky-rng-nama, td.sticky-rng-nama { position: sticky; left: 28px; z-index: 15; background-color: #f3f4f6; border-right: 2px solid #333; }
+
+/* Perbaikan Border saat sticky */
+th, td { border-left: none; border-top: none; }
+th { border-top: 1px solid #000; }
+td:first-child, th:first-child { border-left: 1px solid #000; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -348,7 +360,7 @@ function renderTabel() {
   html += '</tr></thead><tbody>';
 
   daftarDriver.forEach(function(drv, idx) {
-    html += '<tr><td class="no-col">' + (idx + 1) + '</td><td class="driver-name">' + drv.nama + '</td>';
+    html += '<tr><td class="sticky-no" style="text-align:center;">' + (idx + 1) + '</td><td class="sticky-nama" style="text-align:left; font-weight:bold; padding-left:6px;">' + drv.nama + '</td>';
     for (let d = 1; d <= jmlHari; d++) {
       const tgl = curTahun + '-' + String(curBulan).padStart(2,'0') + '-' + String(d).padStart(2,'0');
       const key = drv.nama + '|' + tgl;
@@ -838,12 +850,12 @@ async function renderRingkasan() {
   const bulanList = []; dateArr.forEach(function(tgl) { const key = tgl.getFullYear() + '-' + tgl.getMonth(); const last = bulanList[bulanList.length - 1]; if (!last || last.key !== key) { bulanList.push({ key: key, nama: NAMA_BULAN[tgl.getMonth()+1] + ' ' + tgl.getFullYear(), jumlah: 1 }); } else { last.jumlah++; } });
   const multiBulan = bulanList.length > 1;
   let html = '<table style="border-collapse:collapse;width:100%;font-size:10px;"><thead>';
-  if (multiBulan) { html += '<tr><th rowspan="2" style="background:#9333ea;color:white;padding:3px;border:1px solid #555;">NO</th><th rowspan="2" style="background:#9333ea;color:white;padding:3px;border:1px solid #555;text-align:left;">NAMA</th>'; bulanList.forEach(function(b) { html += '<th colspan="' + b.jumlah + '" style="background:#6b21a8;color:white;padding:3px;border:1px solid #555;font-size:10px;">' + b.nama + '</th>'; }); html += '<th rowspan="2" style="background:#28A745;color:white;padding:3px;border:1px solid #555;">TOTAL</th></tr><tr>'; } else { html += '<tr><th style="background:#9333ea;color:white;padding:3px;border:1px solid #555;">NO</th><th style="background:#9333ea;color:white;padding:3px;border:1px solid #555;text-align:left;">NAMA</th>'; }
+  if (multiBulan) { html += '<tr><th rowspan="2" class="sticky-rng-no" style="padding:3px;">NO</th><th rowspan="2" class="sticky-rng-nama" style="padding:3px;text-align:left;">NAMA</th>'; bulanList.forEach(function(b) { html += '<th colspan="' + b.jumlah + '" style="background:#6b21a8;color:white;padding:3px;border:1px solid #555;font-size:10px;">' + b.nama + '</th>'; }); html += '<th rowspan="2" style="background:#28A745;color:white;padding:3px;border:1px solid #555;">TOTAL</th></tr><tr>'; } else { html += '<tr><th class="sticky-rng-no" style="padding:3px;">NO</th><th class="sticky-rng-nama" style="padding:3px;text-align:left;">NAMA</th>'; }
   for (let h = 0; h < dateArr.length; h++) { const tgl = dateArr[h]; const cls = tgl.getDay() === 1 ? 'background:#dc3545;color:white;' : 'background:#c4b5fd;'; html += '<th style="' + cls + 'padding:2px;border:1px solid #555;font-size:9px;">' + tgl.getDate() + '</th>'; }
   if (!multiBulan) { html += '<th style="background:#28A745;color:white;padding:3px;border:1px solid #555;">TOTAL</th>'; } html += '</tr></thead><tbody>';
   daftarDriver.forEach(function(drv, idx) {
     const rowData = { nama: drv.nama, hari: [], total: 0 }; let totalMenit = 0;
-    html += '<tr><td style="text-align:center;padding:2px;border:1px solid #ccc;background:#f3f4f6;">' + (idx + 1) + '</td><td style="padding:2px 6px;border:1px solid #ccc;font-weight:bold;background:#f3f4f6;">' + drv.nama + '</td>';
+    html += '<tr><td class="sticky-rng-no" style="text-align:center;padding:2px;">' + (idx + 1) + '</td><td class="sticky-rng-nama" style="padding:2px 6px;font-weight:bold;">' + drv.nama + '</td>';
     for (let h = 0; h < dateArr.length; h++) {
       const tgl = dateArr[h]; const tglStr = tgl.getFullYear() + '-' + String(tgl.getMonth() + 1).padStart(2,'0') + '-' + String(tgl.getDate()).padStart(2,'0'); const shifts = dataAll[drv.nama + '|' + tglStr] || [];
       let menitHariIni = null;
