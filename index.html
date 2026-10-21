@@ -89,18 +89,21 @@ td.cell:hover { background: #f0f0f0; }
   .picker-preview { font-size: 34px; padding: 10px; }
 }
 /* === FREEZE PANE (STICKY COLUMNS) === */
-th.sticky-no, td.sticky-no { position: sticky; left: 0; z-index: 15; background-color: #FFF2CC; border-right: 1px solid #999; }
-th.sticky-nama, td.sticky-nama { position: sticky; left: 28px; z-index: 15; background-color: #FFF2CC; border-right: 2px solid #333; }
+table { border-collapse: separate; border-spacing: 0; }
+thead th { position: sticky; top: 0; z-index: 10; background-color: #FFC000; border-top: 1px solid #000; }
+th.sticky-no { position: sticky; left: 0; z-index: 30; background-color: #FFF2CC; border-right: 1px solid #999; }
+th.sticky-nama { position: sticky; left: 28px; z-index: 30; background-color: #FFF2CC; border-right: 2px solid #333; }
+td.sticky-no { position: sticky; left: 0; z-index: 5; background-color: #FFF2CC; border-right: 1px solid #999; }
+td.sticky-nama { position: sticky; left: 28px; z-index: 5; background-color: #FFF2CC; border-right: 2px solid #333; }
 
-/* Ringkasan Sticky */
-th.sticky-rng-no, td.sticky-rng-no { position: sticky; left: 0; z-index: 15; background-color: #9333ea; color: white; border-right: 1px solid #999; }
-th.sticky-rng-nama, td.sticky-rng-nama { position: sticky; left: 28px; z-index: 15; background-color: #f3f4f6; border-right: 2px solid #333; }
+th.sticky-rng-no { position: sticky; left: 0; z-index: 20; background-color: #9333ea; color: white; border-right: 1px solid #999; }
+th.sticky-rng-nama { position: sticky; left: 28px; z-index: 20; background-color: #f3f4f6; border-right: 2px solid #333; }
+td.sticky-rng-no { position: sticky; left: 0; z-index: 5; background-color: #9333ea; color: white; border-right: 1px solid #999; }
+td.sticky-rng-nama { position: sticky; left: 28px; z-index: 5; background-color: #f3f4f6; border-right: 2px solid #333; }
 
-/* Perbaikan Border saat sticky */
 th, td { border-left: none; border-top: none; }
-th { border-top: 1px solid #000; }
 td:first-child, th:first-child { border-left: 1px solid #000; }
-</style>
+tr:first-child th { border-top: 1px solid #000; }</style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -114,6 +117,7 @@ td:first-child, th:first-child { border-left: 1px solid #000; }
     <button onclick="geserBulan(1)">&#8594;</button>
     <button class="btn-green" onclick="bukaModal('modalDriver')">&#9881; Driver</button>
     <button class="btn-cyan" onclick="refreshData()">&#8635; Sync</button>
+    <button class="btn-orange" onclick="cekDataKosong()">&#9888;&#65039; Cek Data</button>
     <button class="btn-orange" onclick="bukaModalExport()">&#128190; Export Excel</button>
     <button class="btn-purple" onclick="buatMatrix()">&#128202; Matrix</button>
     <button class="btn-teal" onclick="uploadMatrix()">&#128229; Upload Matrix</button>
@@ -460,6 +464,28 @@ function toMins(t) {
   if (!t) return 0;
   const p = String(t).split(':'); 
   return parseInt(p[0], 10) * 60 + parseInt(p[1], 10); 
+}
+
+async function cekDataKosong() {
+  toast('Memindai data kosong...');
+  try {
+    const r = await api({ action: 'cek_incomplete' });
+    if (r.ok) {
+      if (r.data.length === 0) {
+        alert('✅ Semua data sudah lengkap. Tidak ada jam IN yang kosong pada shift sebelumnya.');
+      } else {
+        let msg = '⚠️ DITEMUKAN DATA BELUM LENGKAP\n\nAda shift lama yang belum diisi jam IN-nya:\n\n';
+        const maxShow = 15;
+        for (let i = 0; i < Math.min(r.data.length, maxShow); i++) {
+          const d = r.data[i];
+          msg += '- ' + d.nama + ' (' + d.tanggal + ' Shift ' + d.shift + '): OUT ' + d.out + ', IN kosong\n';
+        }
+        if (r.data.length > maxShow) msg += '\n... dan ' + (r.data.length - maxShow) + ' lainnya.';
+        msg += '\n\nSilakan perbaiki data ini di Google Sheets (Sheet Data) atau di aplikasi.';
+        alert(msg);
+      }
+    } else { toast('Gagal: ' + r.error); }
+  } catch(e) { toast('Error: ' + e.message); }
 }
 
 async function simpanSemuaShift() {
