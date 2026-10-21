@@ -426,14 +426,110 @@ function renderListShift() {
 function tambahBarisShift() { currentShiftData.push({ out: '', in: '' }); renderListShift(); }
 function hapusBarisShift(idx) { currentShiftData.splice(idx, 1); if (currentShiftData.length === 0) currentShiftData.push({ out: '', in: '' }); renderListShift(); }
 
+function toMins(t) { 
+  if (!t) return 0;
+  const p = String(t).split(':'); 
+  return parseInt(p[0], 10) * 60 + parseInt(p[1], 10); 
+}
+
 async function simpanSemuaShift() {
   if (!currentShiftTarget) return;
+
+  // 1. VALIDASI LOGIKA SHIFT
+  let errorMsg = '';
+  let parsedShifts = [];
+  let hasCrossDay = false;
+
+  for (let i = 0; i < currentShiftData.length; i++) {
+    const s = currentShiftData[i];
+    if (!s.out && !s.in) continue;
+    
+    if (!s.out || !s.in) { 
+      errorMsg = 'Shift ke-' + (i+1) + ' belum lengkap. Harap isi jam OUT dan IN.'; 
+      break; 
+    }
+
+    const outM = toMins(s.out);
+    const inM = toMins(s.in);
+    const isCrossDay = inM < outM;
+
+    if (parsedShifts.length > 0) {
+      const prev = parsedShifts[parsedShifts.length - 1];
+      const prevInM = toMins(prev.in);
+      const prevOutM = toMins(prev.out);
+      const prevCrossDay = prevInM < prevOutM;
+
+      if (!prevCrossDay && outM < prevInM) {
+        errorMsg = 'Shift ke-' + (i+1) + ' (' + s.out + ') tidak boleh lebih awal dari jam pulang Shift ke-' + parsedShifts.length + ' (' + prev.in + ').';
+        break;
+      }
+      if (prevCrossDay && outM < prevInM && outM > prevOutM) {
+        errorMsg = 'Shift ke-' + (i+1) + ' (' + s.out + ') bentrok dengan Shift ke-' + parsedShifts.length + ' yang berakhir besok jam ' + prev.in + '.';
+        break;
+      }
+    }
+    if (isCrossDay) hasCrossDay = true;
+    parsedShifts.push(s);
+  }
+
+  if (errorMsg) {
+    alert('❌ INPUT DITOLAK\n\n' + errorMsg + '\n\nSilakan periksa kembali urutan jam kerja.');
+    return;
+  }
+
+  if (parsedShifts.length === 0) {
+    if (!confirm('Semua shift kosong. Hapus data shift hari ini?')) return;
+  }
+
+  // 2. PROSES SIMPAN (Termasuk Lintas Hari)
+  let shiftsForToday = [];
+  let shiftsForTomorrow = [];
+  
+  parsedShifts.forEach(function(s) {
+    const outM = toMins(s.out);
+    const inM = toMins(s.in);
+    if (inM < outM) {
+      // Lintas hari: pecah jadi 2
+      shiftsForToday.push({ out: s.out, in: '23:59' });
+      shiftsForTomorrow.push({ out: '00:00', in: s.in });
+    } else {
+      shiftsForToday.push(s);
+    }
+  });
+
+  if (hasCrossDay) {
+    if (!confirm('⚠️ PERHATIAN: Ada shift yang melewati tengah malam (Pulang < Berangkat).\nSistem akan otomatis membagi shift tersebut ke tanggal besok.\n\nLanjutkan Simpan?')) return;
+  }
+
   toast('Menyimpan...');
   try {
-    const r = await api({ action: 'simpan_shifts', nama: currentShiftTarget.nama, tanggal: currentShiftTarget.tgl, shifts: JSON.stringify(currentShiftData) });
-    if (r.ok) { toast('✅ Shift tersimpan'); tutupModalShift(); refreshData(true); } 
-    else { toast('Gagal: ' + r.error); }
-  } catch(e) { toast('Error: ' + e.message); }
+    // Simpan Hari Ini
+    await api({ action: 'simpan_shifts', nama: currentShiftTarget.nama, tanggal: currentShiftTarget.tgl, shifts: JSON.stringify(shiftsForToday) });
+    
+    // Simpan Besok (Jika ada shift lintas hari)
+    if (shiftsForTomorrow.length > 0) {
+      const d = new Date(currentShiftTarget.tgl);
+      d.setDate(d.getDate() + 1);
+      const tglBsk = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+      
+      // Ambil data besok yang sudah ada (biar tidak tertimpa)
+      const rBsk = await api({ action: 'data', bulan: d.getMonth()+1, tahun: d.getFullYear() });
+      let shiftsBsk = [];
+      if (rBsk.ok && rBsk.data[currentShiftTarget.nama + '|' + tglBsk]) {
+        shiftsBsk = rBsk.data[currentShiftTarget.nama + '|' + tglBsk];
+      }
+      
+      // Gabungkan sisa shift malam ini dengan shift besok
+      const gabunganBsk = shiftsForTomorrow.concat(shiftsBsk);
+      await api({ action: 'simpan_shifts', nama: currentShiftTarget.nama, tanggal: tglBsk, shifts: JSON.stringify(gabunganBsk) });
+    }
+
+    toast('✅ Semua Shift tersimpan');
+    tutupModalShift();
+    refreshData(true);
+  } catch(e) { 
+    toast('Error: ' + e.message); 
+  }
 }
 
 // ================== PICKER JAM ==================
