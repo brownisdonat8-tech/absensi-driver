@@ -136,7 +136,7 @@ td.cell:hover { background: #f0f0f0; }
 </div>
 
 <!-- Modal Picker Jam -->
-<div class="picker-overlay" id="pickerJam">
+<div class="picker-overlay" id="pickerJam" style="z-index: 10005;">
   <div class="picker">
     <div class="picker-header">
       <span id="pickerTitle">Pilih Jam</span>
@@ -157,7 +157,7 @@ td.cell:hover { background: #f0f0f0; }
 </div>
 
 <!-- Modal Multi-Shift -->
-<div class="picker-overlay" id="modalShift">
+<div class="picker-overlay" id="modalShift" style="z-index: 10000;">
   <div class="picker" style="max-width: 600px;">
     <div class="picker-header" style="background: #fd7e14;">
       <span id="shiftTitle">Kelola Shift</span>
@@ -430,7 +430,7 @@ async function simpanSemuaShift() {
   if (!currentShiftTarget) return;
   toast('Menyimpan...');
   try {
-    const r = await api({ action: 'simpan_shifts', nama: currentShiftTarget.nama, tanggal: currentShiftTarget.tgl, shifts: currentShiftData });
+    const r = await api({ action: 'simpan_shifts', nama: currentShiftTarget.nama, tanggal: currentShiftTarget.tgl, shifts: JSON.stringify(currentShiftData) });
     if (r.ok) { toast('✅ Shift tersimpan'); tutupModalShift(); refreshData(true); } 
     else { toast('Gagal: ' + r.error); }
   } catch(e) { toast('Error: ' + e.message); }
