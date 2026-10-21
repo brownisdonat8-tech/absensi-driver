@@ -162,31 +162,28 @@ Buka Chrome &rarr; ketik di address bar: <code>brownisdonat8-tech.github.io/abse
 <h3>Tombol &#10067; Panduan (Merah)</h3>
 <p>Untuk membuka halaman panduan ini. Klik &rarr; akan terbuka di tab baru.</p>
 
-<h2 id="input">5. Cara Input Jam Kerja</h2>
-<p>Ini kegiatan utama sehari-hari. Ikuti langkah ini:</p>
+<h2 id="input">5. Cara Input Jam Kerja (Multi-Shift)</h2>
+<p>Driver sekarang bisa memiliki lebih dari 1 shift dalam sehari (misal: pagi-siang, lalu sore-malam).</p>
 
-<div class="step"><span class="step-num">1</span><b>Cari nama driver</b> di kolom NAMA (kiri). Contoh: <b>VIRLA</b>.</div>
-<div class="step"><span class="step-num">2</span><b>Cari kolom tanggal</b> hari ini (lihat nama hari &amp; tanggal di header). Contoh: <b>SENIN 05-Okt-26</b>.</div>
-<div class="step"><span class="step-num">3</span>Ada 2 sub-kolom: <b>OUT</b> (hijau) dan <b>IN</b> (hijau muda).</div>
-<div class="step"><span class="step-num">4</span><b>Tap kotak di bawah OUT</b> &mdash; muncul input jam.</div>
-<div class="step"><span class="step-num">5</span>Atur jam berangkat (misal 07:30). Tap <b>OK/Set</b>.</div>
-<div class="step"><span class="step-num">6</span>Kotak akan berkedip <span style="background:#C6EFCE;padding:2px 6px;border-radius:3px;">hijau</span> = berhasil tersimpan.</div>
-<div class="step"><span class="step-num">7</span>Saat driver pulang, tap kotak di bawah IN. Atur jam pulang (misal 15:45). Tap OK.</div>
+<div class="step"><span class="step-num">1</span><b>Cari nama driver</b> dan <b>kolom tanggal</b> yang ingin diisi.</div>
+<div class="step"><span class="step-num">2</span><b>Tap kotak OUT atau IN</b> pada tanggal tersebut. Akan muncul jendela <b>"Kelola Shift"</b>.</div>
+<div class="step"><span class="step-num">3</span>Di dalam jendela, Anda akan melihat 1 baris input (Shift 1).</div>
+<div class="step"><span class="step-num">4</span>Tap kotak <b>OUT</b>, lalu pilih jam berangkat (format 24 jam). Tap <b>Simpan</b>.</div>
+<div class="step"><span class="step-num">5</span>Tap kotak <b>IN</b>, lalu pilih jam pulang. Tap <b>Simpan</b>.</div>
+<div class="step"><span class="step-num">6</span>Jika driver kerja lagi setelah istirahat, tap tombol hijau <b>+ Tambah Shift Baru</b>. Ulangi langkah 4 &amp; 5.</div>
+<div class="step"><span class="step-num">7</span>Setelah semua shift hari itu terisi, tap tombol hijau <b>Simpan Semua</b> di bagian paling bawah.</div>
 
-<div class="box box-success">
-<b>&#9989; Selesai!</b> Data otomatis tersimpan ke Google Sheets (kalau ONLINE). Kalau OFFLINE, data disimpan sementara di tablet, nanti otomatis terkirim saat WiFi nyala.
+<div class="box box-warning">
+<b>&#9888; Aturan Validasi Sistem (PENTING):</b><br>
+Sistem akan <b>MENOLAK</b> input jika:<br>
+1. <b>Bentrok Waktu:</b> Jam berangkat (OUT) Shift 2 lebih awal dari jam pulang (IN) Shift 1.<br>
+2. <b>Lintas Hari (Lembur):</b> Jika jam IN lebih kecil dari OUT (misal 22:00 - 05:00), sistem akan otomatis memecahnya menjadi hari ini (22:00-23:59) dan besok (00:00-05:00). Pastikan tidak bentrok dengan shift besoknya.<br>
+3. <b>Data Menggantung:</b> Jika shift sebelumnya belum diisi jam IN (kosong), shift baru tidak boleh diisi (harus lengkapi dulu).
 </div>
 
-<h3>Tanda Warna Kotak Input:</h3>
-<table>
-<tr><th>Warna</th><th>Artinya</th></tr>
-<tr><td><span style="background:#FFF9C4;padding:4px 20px;border:1px solid #ccc;">Kuning</span></td><td>Sedang dipilih (aktif)</td></tr>
-<tr><td><span style="background:#C6EFCE;padding:4px 20px;border:1px solid #ccc;">Hijau</span></td><td>Data berhasil terkirim ke Google Sheets</td></tr>
-<tr><td><span style="background:#FFE5B4;padding:4px 20px;border:1px solid #ccc;">Oranye</span></td><td>Data disimpan sementara (offline), belum ter-sync</td></tr>
-<tr><td><span style="background:#fff;padding:4px 20px;border:1px solid #ccc;">Putih</span></td><td>Belum ada input / kosong</td></tr>
-</table>
-
-<h2 id="driver">6. Kelola Daftar Driver</h2>
+<div class="box box-success">
+<b>&#9989; Selesai!</b> Data otomatis tersimpan ke Google Sheets (kalau ONLINE). Kalau OFFLINE, data disimpan sementara dan otomatis terkirim saat WiFi nyala.
+</div><h2 id="driver">6. Kelola Daftar Driver</h2>
 <p>Kalau ada driver baru masuk, atau driver resign, kamu bisa ubah daftarnya di sini.</p>
 
 <div class="step"><span class="step-num">1</span>Tap tombol <span class="btn-mock b-green">&#9881; Driver</span></div>
