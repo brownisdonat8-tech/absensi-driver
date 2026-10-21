@@ -402,22 +402,30 @@ function updatePickerPreview() {
 }
 
 function pickerClear() {
-  if (!pickerTarget) return;
-  pickerTarget.value = "";
-  saveCell(pickerTarget);
-  tutupPicker();
-  toast("Jam dikosongkan");
+  if (typeof currentShiftTarget !== 'undefined' && currentShiftTarget !== null && pickerTarget === null) {
+    currentShiftData[pickerShiftTargetIdx][pickerShiftTargetType] = '';
+    renderListShift();
+    document.getElementById('pickerJam').classList.remove('show');
+  } else if (pickerTarget) {
+    pickerTarget.value = '';
+    saveCell(pickerTarget);
+    tutupPicker();
+    toast('Jam dikosongkan');
+  }
 }
 
 function pickerSave() {
-  if (!pickerTarget) return;
-  if (pickerHour === null || pickerMin === null) {
-    toast("Pilih jam & menit dulu");
-    return;
+  if (typeof currentShiftTarget !== 'undefined' && currentShiftTarget !== null && pickerTarget === null) {
+    if (pickerHour === null || pickerMin === null) { toast('Pilih jam dulu'); return; }
+    currentShiftData[pickerShiftTargetIdx][pickerShiftTargetType] = String(pickerHour).padStart(2,'0') + ':' + String(pickerMin).padStart(2,'0');
+    renderListShift();
+    document.getElementById('pickerJam').classList.remove('show');
+  } else if (pickerTarget) {
+    if (pickerHour === null || pickerMin === null) { toast('Pilih jam & menit dulu'); return; }
+    pickerTarget.value = String(pickerHour).padStart(2, '0') + ':' + String(pickerMin).padStart(2, '0');
+    saveCell(pickerTarget);
+    tutupPicker();
   }
-  pickerTarget.value = String(pickerHour).padStart(2, "0") + ":" + String(pickerMin).padStart(2, "0");
-  saveCell(pickerTarget);
-  tutupPicker();
 }
 
 function tutupPicker() {
@@ -466,16 +474,6 @@ function driversUntukBulan(bulan, tahun) {
     if (d.tglResign) { const tr = new Date(d.tglResign); if (tr < tglAwal) return false; }
     return true;
   });
-}
-
-function getShifts(key) {
-  const raw = logs[key];
-  if (!raw) return [];
-  if (Array.isArray(raw)) return raw;
-  if (typeof raw === 'object' && (raw.out || raw.in)) {
-    return [{ shift: 1, out: raw.out || '', in: raw.in || '' }];
-  }
-  return [];
 }
 
 function renderTabel() {
@@ -527,6 +525,16 @@ function geserBulan(delta) {
   if (curBulan > 12) { curBulan = 1; curTahun++; }
   if (curBulan < 1) { curBulan = 12; curTahun--; }
 inisialisasiPicker();
+function getShifts(key) {
+  const raw = logs[key];
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === 'object' && (raw.out || raw.in)) {
+    return [{ shift: 1, out: raw.out || '', in: raw.in || '' }];
+  }
+  return [];
+}
+
 // ============ MODAL MULTI-SHIFT ============
 let currentShiftTarget = null;
 let currentShiftData = [];
@@ -601,29 +609,6 @@ function bukaPickerShift(idx, type) {
   document.getElementById('pickerJam').classList.add('show');
 }
 
-const originalPickerSave = pickerSave;
-pickerSave = function() {
-  if (pickerTarget === null && currentShiftTarget !== null) {
-    if (pickerHour === null || pickerMin === null) { toast('Pilih jam dulu'); return; }
-    currentShiftData[pickerShiftTargetIdx][pickerShiftTargetType] = String(pickerHour).padStart(2,'0') + ':' + String(pickerMin).padStart(2,'0');
-    renderListShift();
-    document.getElementById('pickerJam').classList.remove('show');
-  } else if (pickerTarget) {
-    originalPickerSave();
-  }
-};
-
-const originalPickerClear = pickerClear;
-pickerClear = function() {
-  if (pickerTarget === null && currentShiftTarget !== null) {
-    currentShiftData[pickerShiftTargetIdx][pickerShiftTargetType] = '';
-    renderListShift();
-    document.getElementById('pickerJam').classList.remove('show');
-  } else if (pickerTarget) {
-    originalPickerClear();
-  }
-};
-
 async function simpanSemuaShift() {
   if (!currentShiftTarget) return;
   toast('Menyimpan...');
@@ -636,7 +621,6 @@ async function simpanSemuaShift() {
     } else { toast('Gagal: ' + r.error); }
   } catch(e) { toast('Error: ' + e.message); }
 }
-
   loadCache();
   renderTabel();
   refreshData(true);
@@ -1574,7 +1558,6 @@ refreshData(true);
     </div>
   </div>
 </div>
-<!-- MODAL MULTI-SHIFT -->
 <div class="picker-overlay" id="modalShift">
   <div class="picker" style="max-width: 600px;">
     <div class="picker-header" style="background: #fd7e14;">
