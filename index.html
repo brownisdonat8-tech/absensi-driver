@@ -344,8 +344,8 @@ function renderTabel() {
   document.getElementById('bulanLabel').innerText = NAMA_BULAN[curBulan] + ' ' + curTahun;
 
   let html = '<table><thead><tr>';
-  html += '<th rowspan="2" style="background:#FFF2CC;">NO</th>';
-  html += '<th rowspan="2" style="background:#FFF2CC;">NAMA</th>';
+  html += '<th rowspan="2" class="sticky-no" style="z-index: 30; text-align:center; vertical-align:middle;">NO</th>';
+  html += '<th rowspan="2" class="sticky-nama" style="z-index: 30; text-align:center; vertical-align:middle;">NAMA</th>';
   
   for (let d = 1; d <= jmlHari; d++) {
     const tgl = new Date(curTahun, curBulan - 1, d);
@@ -353,7 +353,6 @@ function renderTabel() {
     const cls = dow === 0 ? ' monday' : '';
     const blnShort = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'][curBulan-1];
     const tglStr = String(d).padStart(2,'0') + '-' + blnShort + '-' + String(curTahun).slice(-2);
-    // Menggunakan <div> bukan <br> agar tidak ada spasi aneh
     html += '<th colspan="2" class="day-header' + cls + '">';
     html += '<div>' + NAMA_HARI[dow] + '</div><div style="font-size:9px; font-weight:normal;">' + tglStr + '</div>';
     html += '</th>';
