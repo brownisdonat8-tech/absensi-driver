@@ -402,30 +402,22 @@ function updatePickerPreview() {
 }
 
 function pickerClear() {
-  if (typeof currentShiftTarget !== 'undefined' && currentShiftTarget !== null && pickerTarget === null) {
-    currentShiftData[pickerShiftTargetIdx][pickerShiftTargetType] = '';
-    renderListShift();
-    document.getElementById('pickerJam').classList.remove('show');
-  } else if (pickerTarget) {
-    pickerTarget.value = '';
-    saveCell(pickerTarget);
-    tutupPicker();
-    toast('Jam dikosongkan');
-  }
+  if (!pickerTarget) return;
+  pickerTarget.value = "";
+  saveCell(pickerTarget);
+  tutupPicker();
+  toast("Jam dikosongkan");
 }
 
 function pickerSave() {
-  if (typeof currentShiftTarget !== 'undefined' && currentShiftTarget !== null && pickerTarget === null) {
-    if (pickerHour === null || pickerMin === null) { toast('Pilih jam dulu'); return; }
-    currentShiftData[pickerShiftTargetIdx][pickerShiftTargetType] = String(pickerHour).padStart(2,'0') + ':' + String(pickerMin).padStart(2,'0');
-    renderListShift();
-    document.getElementById('pickerJam').classList.remove('show');
-  } else if (pickerTarget) {
-    if (pickerHour === null || pickerMin === null) { toast('Pilih jam & menit dulu'); return; }
-    pickerTarget.value = String(pickerHour).padStart(2, '0') + ':' + String(pickerMin).padStart(2, '0');
-    saveCell(pickerTarget);
-    tutupPicker();
+  if (!pickerTarget) return;
+  if (pickerHour === null || pickerMin === null) {
+    toast("Pilih jam & menit dulu");
+    return;
   }
+  pickerTarget.value = String(pickerHour).padStart(2, "0") + ":" + String(pickerMin).padStart(2, "0");
+  saveCell(pickerTarget);
+  tutupPicker();
 }
 
 function tutupPicker() {
@@ -495,23 +487,17 @@ function renderTabel() {
   for (let d = 1; d <= jmlHari; d++) html += '<th class="out-col">OUT</th><th class="in-col">IN</th>';
   html += '</tr></thead><tbody>';
 
-    daftarDriver.forEach(function(drv, idx) {
-      html += '<tr><td class="no-col">' + (idx + 1) + '</td><td class="driver-name">' + drv.nama + '</td>';
-      for (let d = 1; d <= jmlHari; d++) {
-        const tgl = curTahun + '-' + String(curBulan).padStart(2,'0') + '-' + String(d).padStart(2,'0');
-        const key = drv.nama + '|' + tgl;
-        const shifts = getShifts(key);
-        
-        let outStr = shifts.map(function(s) { return s.out; }).filter(Boolean).join('<br>');
-        let inStr = shifts.map(function(s) { return s.in; }).filter(Boolean).join('<br>');
-        if (!outStr) outStr = '-';
-        if (!inStr) inStr = '-';
-
-        html += '<td class="cell" style="cursor:pointer; text-align:center; font-size:12px; font-weight:bold; color:#C00000; background:#fff; padding:4px;" onclick="bukaModalShift(\'' + drv.nama + '\', \'' + tgl + '\')">' + outStr + '</td>';
-        html += '<td class="cell" style="cursor:pointer; text-align:center; font-size:12px; font-weight:bold; color:#C00000; background:#fff; padding:4px;" onclick="bukaModalShift(\'' + drv.nama + '\', \'' + tgl + '\')">' + inStr + '</td>';
-      }
-      html += '</tr>';
-    });
+  daftarDriver.forEach(function(drv, idx) {
+    html += '<tr><td class="no-col">' + (idx + 1) + '</td><td class="driver-name">' + drv.nama + '</td>';
+    for (let d = 1; d <= jmlHari; d++) {
+      const tgl = curTahun + '-' + String(curBulan).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+      const key = drv.nama + '|' + tgl;
+      const log = logs[key] || { out: '', in: '' };
+      html += '<td class="cell"><input type="time" data-nama="' + drv.nama + '" data-tgl="' + tgl + '" data-tipe="out" value="' + (log.out || '') + '"></td>';
+      html += '<td class="cell"><input type="time" data-nama="' + drv.nama + '" data-tgl="' + tgl + '" data-tipe="in" value="' + (log.in || '') + '"></td>';
+    }
+    html += '</tr>';
+  });
   html += '</tbody></table>';
   document.getElementById('tableWrap').innerHTML = html;
 
@@ -525,102 +511,6 @@ function geserBulan(delta) {
   if (curBulan > 12) { curBulan = 1; curTahun++; }
   if (curBulan < 1) { curBulan = 12; curTahun--; }
 inisialisasiPicker();
-function getShifts(key) {
-  const raw = logs[key];
-  if (!raw) return [];
-  if (Array.isArray(raw)) return raw;
-  if (typeof raw === 'object' && (raw.out || raw.in)) {
-    return [{ shift: 1, out: raw.out || '', in: raw.in || '' }];
-  }
-  return [];
-}
-
-// ============ MODAL MULTI-SHIFT ============
-let currentShiftTarget = null;
-let currentShiftData = [];
-let pickerShiftTargetIdx = -1;
-let pickerShiftTargetType = '';
-
-function bukaModalShift(nama, tgl) {
-  currentShiftTarget = { nama: nama, tgl: tgl };
-  const key = nama + '|' + tgl;
-  currentShiftData = JSON.parse(JSON.stringify(getShifts(key)));
-  if (currentShiftData.length === 0) currentShiftData.push({ out: '', in: '' });
-  
-  document.getElementById('shiftTitle').textContent = 'Shift - ' + nama;
-  document.getElementById('shiftInfo').innerHTML = '<b>Tanggal:</b> ' + tgl;
-  renderListShift();
-  document.getElementById('modalShift').classList.add('show');
-}
-
-function tutupModalShift() {
-  document.getElementById('modalShift').classList.remove('show');
-  currentShiftTarget = null; currentShiftData = [];
-}
-
-function renderListShift() {
-  const container = document.getElementById('shiftList');
-  container.innerHTML = '';
-  currentShiftData.forEach(function(s, idx) {
-    const row = document.createElement('div');
-    row.style.cssText = 'display:grid; grid-template-columns: 1fr 1fr 40px; gap:8px; margin-bottom:8px; align-items:center;';
-    
-    const inpOut = document.createElement('input');
-    inpOut.type = 'text'; inpOut.readOnly = true; inpOut.className = 'cell-input';
-    inpOut.style.cssText = 'width:100%; padding:10px; text-align:center; border:1px solid #ccc; border-radius:5px; font-weight:bold; color:#C00000;';
-    inpOut.value = s.out || '--:--';
-    inpOut.onclick = function() { bukaPickerShift(idx, 'out'); };
-    
-    const inpIn = document.createElement('input');
-    inpIn.type = 'text'; inpIn.readOnly = true; inpIn.className = 'cell-input';
-    inpIn.style.cssText = 'width:100%; padding:10px; text-align:center; border:1px solid #ccc; border-radius:5px; font-weight:bold; color:#C00000;';
-    inpIn.value = s.in || '--:--';
-    inpIn.onclick = function() { bukaPickerShift(idx, 'in'); };
-    
-    const btnDel = document.createElement('button');
-    btnDel.innerHTML = '&times;';
-    btnDel.style.cssText = 'background:#dc3545; color:white; border:none; border-radius:5px; height:100%; cursor:pointer; font-size:20px;';
-    btnDel.onclick = function() { hapusBarisShift(idx); };
-    
-    row.appendChild(inpOut); row.appendChild(inpIn); row.appendChild(btnDel);
-    container.appendChild(row);
-  });
-}
-
-function tambahBarisShift() { currentShiftData.push({ out: '', in: '' }); renderListShift(); }
-function hapusBarisShift(idx) {
-  currentShiftData.splice(idx, 1);
-  if (currentShiftData.length === 0) currentShiftData.push({ out: '', in: '' });
-  renderListShift();
-}
-
-function bukaPickerShift(idx, type) {
-  pickerTarget = null; 
-  pickerShiftTargetIdx = idx; pickerShiftTargetType = type;
-  const val = currentShiftData[idx][type];
-  if (val && /^\d{1,2}:\d{2}$/.test(val)) {
-    const parts = val.split(':');
-    pickerHour = parseInt(parts[0], 10); pickerMin = parseInt(parts[1], 10);
-  } else { pickerHour = null; pickerMin = null; }
-  
-  document.getElementById('pickerTitle').textContent = 'Pilih Jam ' + (type === 'out' ? 'OUT' : 'IN');
-  document.getElementById('pickerInfo').innerHTML = '<b>Driver:</b> ' + currentShiftTarget.nama;
-  updatePickerPreview();
-  document.getElementById('pickerJam').classList.add('show');
-}
-
-async function simpanSemuaShift() {
-  if (!currentShiftTarget) return;
-  toast('Menyimpan...');
-  try {
-    const r = await api({ action: 'simpan_shifts', nama: currentShiftTarget.nama, tanggal: currentShiftTarget.tgl, shifts: currentShiftData });
-    if (r.ok) {
-      toast('✅ Shift tersimpan');
-      tutupModalShift();
-      refreshData(true);
-    } else { toast('Gagal: ' + r.error); }
-  } catch(e) { toast('Error: ' + e.message); }
-}
   loadCache();
   renderTabel();
   refreshData(true);
@@ -1410,6 +1300,92 @@ async function buatMatrix() {
 renderTabel();
 updateBadge();
 refreshData(true);
+// ============ MODAL MULTI-SHIFT ============
+let currentShiftTarget = null;
+let currentShiftData = [];
+let pickerShiftTargetIdx = -1;
+let pickerShiftTargetType = '';
+
+function bukaModalShift(nama, tgl) {
+  currentShiftTarget = { nama: nama, tgl: tgl };
+  const key = nama + '|' + tgl;
+  currentShiftData = JSON.parse(JSON.stringify(getShifts(key)));
+  if (currentShiftData.length === 0) currentShiftData.push({ out: '', in: '' });
+  
+  document.getElementById('shiftTitle').textContent = 'Shift - ' + nama;
+  document.getElementById('shiftInfo').innerHTML = '<b>Tanggal:</b> ' + tgl;
+  renderListShift();
+  document.getElementById('modalShift').classList.add('show');
+}
+
+function tutupModalShift() {
+  document.getElementById('modalShift').classList.remove('show');
+  currentShiftTarget = null; currentShiftData = [];
+}
+
+function renderListShift() {
+  const container = document.getElementById('shiftList');
+  container.innerHTML = '';
+  currentShiftData.forEach(function(s, idx) {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:grid; grid-template-columns: 1fr 1fr 40px; gap:8px; margin-bottom:8px; align-items:center;';
+    
+    const inpOut = document.createElement('input');
+    inpOut.type = 'text'; inpOut.readOnly = true; inpOut.className = 'cell-input';
+    inpOut.style.cssText = 'width:100%; padding:10px; text-align:center; border:1px solid #ccc; border-radius:5px; font-weight:bold; color:#C00000;';
+    inpOut.value = s.out || '--:--';
+    inpOut.onclick = function() { bukaPickerShift(idx, 'out'); };
+    
+    const inpIn = document.createElement('input');
+    inpIn.type = 'text'; inpIn.readOnly = true; inpIn.className = 'cell-input';
+    inpIn.style.cssText = 'width:100%; padding:10px; text-align:center; border:1px solid #ccc; border-radius:5px; font-weight:bold; color:#C00000;';
+    inpIn.value = s.in || '--:--';
+    inpIn.onclick = function() { bukaPickerShift(idx, 'in'); };
+    
+    const btnDel = document.createElement('button');
+    btnDel.innerHTML = '&times;';
+    btnDel.style.cssText = 'background:#dc3545; color:white; border:none; border-radius:5px; height:100%; cursor:pointer; font-size:20px;';
+    btnDel.onclick = function() { hapusBarisShift(idx); };
+    
+    row.appendChild(inpOut); row.appendChild(inpIn); row.appendChild(btnDel);
+    container.appendChild(row);
+  });
+}
+
+function tambahBarisShift() { currentShiftData.push({ out: '', in: '' }); renderListShift(); }
+function hapusBarisShift(idx) {
+  currentShiftData.splice(idx, 1);
+  if (currentShiftData.length === 0) currentShiftData.push({ out: '', in: '' });
+  renderListShift();
+}
+
+function bukaPickerShift(idx, type) {
+  pickerTarget = null; 
+  pickerShiftTargetIdx = idx; pickerShiftTargetType = type;
+  const val = currentShiftData[idx][type];
+  if (val && /^\d{1,2}:\d{2}$/.test(val)) {
+    const parts = val.split(':');
+    pickerHour = parseInt(parts[0], 10); pickerMin = parseInt(parts[1], 10);
+  } else { pickerHour = null; pickerMin = null; }
+  
+  document.getElementById('pickerTitle').textContent = 'Pilih Jam ' + (type === 'out' ? 'OUT' : 'IN');
+  document.getElementById('pickerInfo').innerHTML = '<b>Driver:</b> ' + currentShiftTarget.nama;
+  updatePickerPreview();
+  document.getElementById('pickerJam').classList.add('show');
+}
+
+async function simpanSemuaShift() {
+  if (!currentShiftTarget) return;
+  toast('Menyimpan...');
+  try {
+    const r = await api({ action: 'simpan_shifts', nama: currentShiftTarget.nama, tanggal: currentShiftTarget.tgl, shifts: currentShiftData });
+    if (r.ok) {
+      toast('✅ Shift tersimpan');
+      tutupModalShift();
+      refreshData(true);
+    } else { toast('Gagal: ' + r.error); }
+  } catch(e) { toast('Error: ' + e.message); }
+}
 </script>
 <div class="modal-bg" id="modalExport">
   <div class="modal">
@@ -1575,5 +1551,6 @@ refreshData(true);
     </div>
   </div>
 </div>
+
 </body>
 </html>
